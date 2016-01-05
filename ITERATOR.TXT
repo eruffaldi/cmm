@@ -1,0 +1,58 @@
+Introduzione
+Gli iteratori sono la colla che lega contenitori ed algoritmi assieme.
+Forniscono una vista astratta dei dati cosicche' quello che scrive un
+algoritmo non deve preoccuparsi dei dettagli concreti di una miriade di
+strutture dati. All'inverso, il modello standard dell'accesso ai dati
+fornito dagli iteratori solleva gli iteratori dal dover fornire un maggiore
+insieme di iteratori. Similmente, gli allocatori sono usati per sollevare le
+implementazioni dei contenitori dai dettagli dell'accesso alla memoria.
+	Gli iteratori supportano un modello astratto di dati come sequenza di
+oggetti. Gli allocatori forniscono una mappa fra un modello di basso livello
+dei dati come array di bytes in un modello di oggetti di alto livello.
+
+(dal C++ Programming Language, Stroustrup, III edizione)
+
+La template class allocator e' il modello di un tipico allocatore; fornisce
+i seguenti membri:
+	value_type
+	size_type
+	difference_type
+	pointer
+	const_pointer
+	reference
+	const_reference
+	pointer address(reference) const
+	const_pointer address(const_reference)
+	allocator()
+	pointer allocate(size_type, allocator<void>::const_pointer)
+	void deallocate(pointer, size_type) // dealloca e non distrugge
+	void construct(pointer, const T&)
+	void destroy(pointer)		// distrugge ma non dealloca
+	size_type max_size()
+
+Esempio di Pool Allocator:
+	Pool(size of elements)
+	void * alloc()
+	free(void *)
+
+Data questa interfaccia trasformiamo la classe Pool in un allocatore
+del tipo precedente.
+	template <class T> class Pool_Alloc
+	private:
+		static Pool mem;
+	public:
+		come allocator
+
+	template <class T> Pool Pool_alloc<T>::mem(sizeof(T));
+
+La mia classe e' invece:
+
+template <class T>
+class MemPool {
+public:
+        void * require(int bytes);
+		pointer create(const T &);
+        pointer create(int n);
+        int count() const;
+		MemPool
+};

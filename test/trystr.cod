@@ -1,0 +1,44 @@
+	TITLE	trystr.cxx
+	.386P
+include listing.inc
+if @Version gt 510
+.model FLAT
+else
+_TEXT	SEGMENT PARA USE32 PUBLIC 'CODE'
+_TEXT	ENDS
+_DATA	SEGMENT DWORD USE32 PUBLIC 'DATA'
+_DATA	ENDS
+CONST	SEGMENT DWORD USE32 PUBLIC 'CONST'
+CONST	ENDS
+_BSS	SEGMENT DWORD USE32 PUBLIC 'BSS'
+_BSS	ENDS
+_TLS	SEGMENT DWORD USE32 PUBLIC 'TLS'
+_TLS	ENDS
+FLAT	GROUP _DATA, CONST, _BSS
+	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT
+endif
+PUBLIC	?f@@YAXXZ					; f
+_DATA	SEGMENT
+$SG167	DB	'Hello World', 00H
+_DATA	ENDS
+_TEXT	SEGMENT
+_cp$ = -4
+?f@@YAXXZ PROC NEAR					; f
+; File trystr.cxx
+; Line 2
+  00000	55		 push	 ebp
+  00001	8b ec		 mov	 ebp, esp
+  00003	51		 push	 ecx
+; Line 4
+  00004	c7 45 fc 00 00
+	00 00		 mov	 DWORD PTR _cp$[ebp], OFFSET FLAT:$SG167
+; Line 5
+  0000b	8b 45 fc	 mov	 eax, DWORD PTR _cp$[ebp]
+  0000e	c6 00 00	 mov	 BYTE PTR [eax], 0
+; Line 6
+  00011	8b e5		 mov	 esp, ebp
+  00013	5d		 pop	 ebp
+  00014	c3		 ret	 0
+?f@@YAXXZ ENDP						; f
+_TEXT	ENDS
+END

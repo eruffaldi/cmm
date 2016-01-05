@@ -1,0 +1,234 @@
+set<char *>	Identifers;		// Global Identifers
+vector< 
+	struct< char* , int n, int offset >
+CScan		Scanner;
+
+union {
+	int ival;
+	char cval;
+	float fval;
+	int strIndex;
+}
+
+class ExpressionParser: 
+	l'expression parser prende un oggetto di tipo CScan e produce
+	in output un PNode di tipo espressione. 
+
+expression
+comma expression
+expression
+primary
+element
+ |-- inserisce nel set Identifers --> CIdentifer + IDENT
+ |-- inserisce nella tabella delle stringhe --> CConstExpr + strIndex
+ \-- costanti char, float, int
+
+
+DICHIARAZIONI
+
+class DeclarationParser
+	costruisce un nodo CDeclaration
+	
+
+Declarator
+Un declarator e' una parte di una dichiarazione che da' nome ad un oggetto, 
+tipo o funzione. Sono uno o piu' nomi separati da virgole.  Inoltre ogni
+nome puo' avere una inizializzazione
+
+Syntax
+
+declarator-list:
+init-declarator				
+declarator-list , init-declarator	==> Ncomma(init-declarator, declarator-list)
+
+init-declarator:
+declarator initializeropt	==> Ndeclarator(declarator, optional init)
+
+
+Syntax
+
+declarator:
+dname	==> aggancia
+ptr-operator declarator ==> Nptr
+declarator ( argument-declaration-list ) cv-mod-list	==> Nfuncdecl
+declarator [ constant-expressionopt ]	==> Narray
+( declarator )	==> aggancia
+
+ptr-operator:
+* cv-qualifier-listopt ==> Nptr
+& cv-qualifier-listopt ==> IGNORED
+complete-class-name :: * cv-qualifier-listopt	IGNORED
+
+cv-qualifier-list: IGNORED
+cv-qualifier cv-qualifier-listopt
+
+cv-qualifier:
+const
+volatile
+
+cv-mod-list:
+cv-qualifier cv-mod-listopt
+pmodel cv-mod-listopt
+
+dname:
+name ==> Nident
+class-name	==> Nident
+~ class-name	==> Ntilde Nident
+typedef-name	==> Nident
+qualified-type-name
+
+
+Prima della declarator-list c'e' una decl-specifier-list ove decl-specifier e':
+	storage-class-specifier: static extern
+	type specifier: typedef name or tknINT...
+	typedef 
+Dunque per stabilire se alcuni token sono una dichiarazione occorre una fra:
+	typedef, [struct class union], int,float..., static, extern, [typename]
+	A questo punto creiamo una Ndeclspec
+
+	Ndeclspec
+	 lista di tutti gli specificatori
+
+Abstract declarators: declarators senza nome
+	Nptr, Narray, Nfuncdecl
+Declarators: i precedenti oltre a Nident
+
+
+static int * b;
+				Ndeclaration
+				/			\
+			   /			Ndeclexpr .name = b
+							  |		\
+			------			Nptr	 *
+			/	 \			  |
+		Nstatic   Nint	-->	  *
+												 					
+  Nota 1: il ramo sinistro di Ndeclaration e' la lista di decl specifiers
+    che appartengono a Nprim, Nstatic o Ntypedef o Nextern, altri
+
+int c, b;
+				  Ndeclaration
+				/		\
+			Nint		Ndeclexpr.name = c  e    Ndeclexpr .name = b
+						 |	  \						| \
+						 *	  *						*  *
+
+int * c(int hello, int h2);
+				Ndeclaration
+				   /	\					
+			   Nint		Ndeclexpr .name = c
+						  |
+					Nfuncdecl
+					/		\
+				  Nptr		1°	-------------------- 2°
+					|		|						 |
+					*    Ndeclaration  			   Ndeclaration  			
+							/	\			 			/	 \
+						Nint	 Ndeclexpr (hello)	  Nint	 Ndeclexpr (h2)
+								 /		\					 /	\
+								*		*					*	 *
+int (v[10])(int c);
+
+			Ndeclaration
+		   /		\
+	   Nprim		Ndeclexpr (v)
+					     |
+					   Narray
+					/			\
+				 Nconstant(10)	Nfuncdecl
+								 /	   \
+								*		1°
+										Ndeclaration
+										 /		\
+										Nint	Ndeclexpr (c)
+												/	\
+											   *	 *
+						
+FUNZIONI:
+
+argument-declaration:
+decl-specifiers declarator	
+decl-specifiers declarator = expression
+decl-specifiers abstract-declaratoropt
+decl-specifiers abstract-declaratoropt = expression
+
+Questa sintassi la rendiamo con:
+			  Ndeclaration
+			/		\
+lista Ndeclspec		  Ndeclexpr IDENT
+					/		\
+			 declarator		init-expression [opt]
+
+In particolare gli identificatori li aggiungiamo come attributo di Ndeclexpr
+
+
+I nodi creati possono essere:	
+	Narray	CBinExpr		sx = size	dx = dimensione
+	Nptr	CUnExpr			un = che cosa punta, anche niente
+	Nprim	CPrimitiveType: contiene una keyword fra tknINT, tknFLOAT, tknCHAR,
+							tknVOID
+	Nfuncdecl	CFuncExpr: sx = declarator del ritorno, lista di Ndeclaration per ogni
+					variabile, tranne  un Nellipse
+		
+
+PARSING DI UNA DICHIARAZIONE
+1° stabilire se e' una decl-specifiers tramite parole chiave o typenames.
+2° costruire una lista di tutti i decl-specifiers incontrati.
+3° 	richiamiamo il prossimo punto il dirdecl. se ritorna function body allora
+   ... altrimenti costruisci un Ndeclaration, inserisci il primo Ndeclexpr e se
+   c'e' "," allora riprova con dirdecl.
+
+		costruisci Ndeclexpr p
+		p.declarator = parseDeclarators(p.ident)
+		se segue un "=" allora 
+			p.init = parseInitExpression();
+		altrimenti se segue un "{"
+			se e' in modalita "declaration" allora EXPECTED ";"
+			altrimenti e' una function definition e ritorna, in questo
+			caso non verra' creato un Ndeclaration ma un Nfuncbody
+		altrimenti se ","
+			ritorna ","
+		altrimenti se ";"
+			ritorna ";"
+		altro
+			errore unexp token
+
+ARGOMENTO DI UNA FUNZIONE
+1° decl-specifier ammesso in una funzione, ovvero non un static/extern
+2° new Ndeclexpr p
+	p.declarator = parseDeclarators(p.ident)
+	se segue un "=" allora 
+		p.init = parseInitExpression();
+	altrimenti se ","
+		ritorna ","
+	altrimenti se ")"
+		ritorna ";"
+	else
+		errore
+3° cicla se c'e' ","
+		
+
+parseDeclarators(ident &)
+	while c'e' "*" allora aggiungi un Nptr
+	se c'e' un ( allora
+		top = parseDeclarators(ident)
+	else 
+		top = 0;
+	se c'e' ident 
+		se e' gia' specificato errore
+	while c'e' [ elabora chiamando
+		parseExpression
+
+	ritorna top.
+
+parseInitExpression
+	se c'e' LBRACE allora ... (NOT IMPLEMENTED)
+	altrimenti parseExpression()
+
+isDeclSpec
+	uno fra extern static...
+
+parseDeclSpec --> lista
+
+
+NB.

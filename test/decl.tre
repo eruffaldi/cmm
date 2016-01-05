@@ -1,0 +1,77 @@
+Nblock
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl ivar
+|- Ndeclstat
+|\- Ndecl  f 
+| \- Ndirdecl fvar
+|- Ndeclstat
+|\- Ndecl  c 
+| \- Ndirdecl cptr
+|  \- Nptrdecl 
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl iarray
+|  \- Narraydecl 
+|   \- Nconst int = 100
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl iarray2
+|  \- Narraydecl 
+|   |- Nptrdecl 
+|   \- "ivar"
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl arrayptr
+|  \- Nptrdecl 
+|   \- Narraydecl 
+|    |- Nptrdecl 
+|    \- Nconst int = 20
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl funcptr
+|  \- Nptrdecl 
+|   \- Nfuncdecl 
+|    |- Nargdecl  i 
+|    |\- Ndirdecl 
+|    \- Nargdecl  c 
+|     \- Ndirdecl 
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl arrayfunc
+|  \- Narraydecl 
+|   |- Nfuncdecl 
+|   ||- Nargdecl  i 
+|   ||\- Ndirdecl 
+|   ||- Nargdecl  c 
+|   ||\- Ndirdecl 
+|   |\- Nargdecl  i 
+|   | \- Ndirdecl 
+|   |  \- Nptrdecl 
+|   |   \- Nfuncdecl 
+|   |    \- Nptrdecl 
+|   |    \- Nargdecl  i 
+|   |     \- Ndirdecl 
+|   \- Nconst int = 40
+\- Ndeclstat
+ \- Ndecl  i 
+  \- Ndirdecl arrayfunc2
+   \- Narraydecl 
+    |- Nptrdecl 
+    |\- Nfuncdecl 
+    | |- Nargdecl  i 
+    | |\- Ndirdecl 
+    | |- Nargdecl  c 
+    | |\- Ndirdecl 
+    | \- Nargdecl  i 
+    |  \- Ndirdecl 
+    |   \- Nptrdecl 
+    |    \- Nfuncdecl 
+    |     \- Nptrdecl 
+    |     \- Nargdecl  i 
+    |      \- Ndirdecl 
+    \- Nconst int = 40
+line 4 - expected constant expression
+line 7 - array element, type cannot be function
+
+	2 error(s)

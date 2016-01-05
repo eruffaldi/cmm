@@ -1,0 +1,38 @@
+<cppsource source="pointers.cxx"><BODY line="0"><DECL><decl:dir id="func"><FUNCDECL><ARGDECL>
+<decl:dir id="k"></decl:dir></ARGDECL>
+</FUNCDECL></decl:dir>
+</DECL><istr:block line="1">
+<DECLSTAT line="2"><DECL><decl:dir id="p1"><PTRDECL>
+</PTRDECL></decl:dir>
+<decl:dir id="p2"><PTRDECL>
+</PTRDECL></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT line="3"><DECL><decl:dir id="pv"><PTRDECL>
+</PTRDECL></decl:dir>
+<decl:dir id="pv2"><PTRDECL>
+</PTRDECL></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT line="4"><DECL><decl:dir id="j"></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT line="5"><DECL><decl:dir id="p3"><PTRDECL>
+</PTRDECL></decl:dir>
+</DECL></DECLSTAT>
+<istr:expr line="8"><assign>
+<ident id="p1"/><ADD>
+<ident id="p2"/><const type = "i" value="1"/></ADD></assign></istr:expr>
+<istr:expr line="9"><assign>
+<ident id="p2"/><ADD>
+<const type = "i" value="2"/><ident id="p1"/></ADD></assign></istr:expr>
+<istr:expr line="10"><assign>
+<ident id="p1"/><SUB>
+<ident id="p2"/><const type = "i" value="1"/></SUB></assign></istr:expr>
+<istr:expr line="11"><assign>
+<ident id="p1"/><ADD>
+<ident id="p2"/><ident id="j"/></ADD></assign></istr:expr>
+<istr:expr line="17"><assign>
+<ident id="j"/><SUB>
+<ident id="p2"/><ident id="p1"/></SUB></assign></istr:expr>
+<istr:return line="17"><ident id="j"/></istr:return>
+</istr:block>
+</BODY>
+</cppsource>

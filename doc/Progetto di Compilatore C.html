@@ -1,0 +1,1641 @@
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=windows-1252">
+<META NAME="Generator" CONTENT="Microsoft Word 97">
+<TITLE>Progetto di Compilatore C++ </TITLE>
+</HEAD>
+<BODY>
+
+<B><FONT SIZE=5><P ALIGN="CENTER"></P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+</FONT><FONT SIZE=6><P ALIGN="CENTER">Progetto di compilatore C++</P>
+</FONT><FONT SIZE=5><P ALIGN="CENTER">per il corso di Informatica Teorica 1998/99</P>
+<P ALIGN="CENTER">di Ruffaldi Emanuele</P>
+<P ALIGN="CENTER"></P>
+<P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="JUSTIFY">&nbsp;</P>
+<P ALIGN="JUSTIFY">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+</FONT><FONT SIZE=2><P>Introduzione</P>
+</B><P>Questo documento descrive l’uso, il funzionamento  e la struttura interna di un mini compilatoere C++ scritto per il corso di Informatica Teorica conformemente ai requisiti posti dal docente. Rispetto al progetto iniziale sono state aggiunte alcune componenti abbastanza rilevanti: </P>
+
+
+<UL>
+<LI>Supporto per le funzioni e le chiamate a funzioni anche esterne al sorgente</LI>
+<LI>Supporto per i tipi base <B>int, float, char;</LI>
+</B><LI>Supporto per array e puntatori di ogni complessita’, anche puntatori a funzione;</LI>
+<LI>Istruzioni for, while, if, do…while;</LI>
+<LI>Introduzione di una fase aggiuntiva per l’analisi semantica;</LI>
+<LI>Dichiarazione di variabili in ogni punto del codice;</LI>
+<LI>Generazione di codice per processore x86 compatibile con assemblatore MASM;</LI>
+<LI>Generazione di codice per processore Alpha (parziale) compatibile con assemblatore Digital;</LI></UL>
+
+
+<P>Il compilatore &egrave; strutturato a pipeline, ogni unit&agrave; processa l’input dalla precedente e la rinvia alla successiva; suddividiamo inoltre tali unit&agrave; fra <B>front-end</B> e <B>back-end</B>. La prima parte, il front-end, &egrave; specifico del linguaggio da tradurre, mentre la seconda  &egrave; specifica della macchina, le due parti condividono, infatti, l’albero di traduzione che contiene le informazioni raccolte prima dall’analisi sintattica e poi da quella semantica. In questa implementazione il front-end &egrave; quello di un sottoinsieme del linguaggio C++, mentre esistono due back-end, uno per macchine Intel x86 ed uno per macchine Digital Alpha. Il diagramma seguente mostra la struttura a pipeline del compilatore, in cui sono indicati gli elementi della pipeline, i dati in ingresso ed uscita, le classi C++ che implementano tali elementi.</P>
+
+</FONT><B><FONT SIZE=5><P ALIGN="CENTER">&nbsp;</P>
+<P ALIGN="CENTER">&nbsp;</P>
+</FONT><FONT SIZE=2><P>Utilizzo del compilatore</P>
+</B><P>La sintassi della linea di comando e le opzioni di questo compilatore sono molto simili a quelle di tradizionali, in particolare la sintassi &egrave;:</P><DIR>
+<DIR>
+
+<I><P ALIGN="JUSTIFY">cmm [opzioni] filesorgente</P></DIR>
+</DIR>
+
+</I><P>dove opzioni indica un – seguito da dei codici che controllano il comportamento del compilatore; la lista delle opzioni &egrave; la seguente:</P></FONT>
+<P ALIGN="CENTER"><CENTER><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=543>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Fp</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Stampa l’albero sintattico</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Fs</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Stampa l’albero dopo l’analisi semantica</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ft</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Stampa la tabella dei simboli</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>GA</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Genera codice per il processore Alpha [default se compilato sotto Digital UNIX]</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>G3</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Genera codice per il processore 386 [default se compilato su di un PC]</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>h</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Mostra l’help</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>P</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Genera solo il file del sorgente preprocessato: <I>filesorgente.i</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>S</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Genera solo il file assembler senza richiamare l’assemblatore: <I>filesorgente.s </I>o <I>filesorgente.asm</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<B><FONT SIZE=2><P>T</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP">
+<FONT SIZE=2><P>Genera solo il file dei token sotto forma di testo: <I>filesorgente.tkn</I></FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2>
+<P>Il compilatore, se richiamato senza le opzioni P, S o T, genera un file assembler .s o .asm e richiama l’assemblatore nel caso in cui questo sia disponibile: in tal caso viene generato un file .o o .obj a seconda della macchina sulla quale gira il compilatore</P></FONT>
+<P ALIGN="CENTER"><CENTER><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=543>
+<TR><TD WIDTH="40%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Macchina</B></FONT></TD>
+<TD WIDTH="18%" VALIGN="TOP">
+<B><FONT SIZE=2><P>File Assembler </B></FONT></TD>
+<TD WIDTH="17%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Assemblatore</B></FONT></TD>
+<TD WIDTH="24%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Modulo oggetto</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="40%" VALIGN="TOP">
+<FONT SIZE=2><P>Alpha</FONT></TD>
+<TD WIDTH="18%" VALIGN="TOP">
+<FONT SIZE=2><P>.s</FONT></TD>
+<TD WIDTH="17%" VALIGN="TOP">
+<FONT SIZE=2><P>as</FONT></TD>
+<TD WIDTH="24%" VALIGN="TOP">
+<FONT SIZE=2><P>.o</FONT></TD>
+</TR>
+<TR><TD WIDTH="40%" VALIGN="TOP">
+<FONT SIZE=2><P>Intel</FONT></TD>
+<TD WIDTH="18%" VALIGN="TOP">
+<FONT SIZE=2><P>.asm</FONT></TD>
+<TD WIDTH="17%" VALIGN="TOP">
+<FONT SIZE=2><P>masm</FONT></TD>
+<TD WIDTH="24%" VALIGN="TOP">
+<FONT SIZE=2><P>.obj</FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2>
+<B><P>Analizzatore lessicale</P>
+</B><P>L’analizzatore sintattico costituisce la prima fase del processo di compilazione ovvero scompone il testo del sorgente in elementi lessicali (token) che consentono di astrarre le operazioni dell’analizzatore sintattico. A sua volta l’analizzatore lessicale, chiamato in seguito lexer, si appoggia al preprocessore che gestisce la lettura dal file sorgente, trasforma i commenti in spazi e fornisce le primitive per una futura gestione di file include. La classe CScan eredita da CPreproc per sfruttandone la funzione di lettura carattere get() e quelle per estrarre informazioni sul numero di linea e di file.</P>
+<P>&#9;Il lexer puo’ essere utilizzato attraverso le funzioni current() e next() che ritornano, rispettivamente il token corrente ed il successivo, un flusso di token puo’ considerarsi terminato alla ricezione del token tknFINEFILE. I tipi di token ricoprono gran parte degli operatori e separatori del C++ oltre a quelli usati per identificare le singole istruzioni (come tknWHILE o tknIF) , i vari tipi di costanti (tknICONST, tknCCONST e tknFCONST) ed infine tknIDENT. A seconda del tipo di token sono associate delle informazioni memorizzate dentro un oggetto Token che puo’ contenere stringhe , numeri o un carattere. </P>
+<P>&#9;Alla luce dell’architettura del lexer si puo’ spiegare il funzionamento delle opzioni –P e –T: la prima costruisce un CPreproc ed estrae caratteri fino alla fine del file, controllando eventuali variazioni nei numeri di linea, la seconda, invece, usa un CScan per estrarre tutti i token fino a tknULTIMO e stampa il risultato in un file usando i comandi di stampa dell’oggetto token. Un esempio del funzionamento dell’analizzatore lessicale e’ mostrato da questo semplice programma:</P><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=2><P>int k = 200;</P>
+
+<P>void f ()</P>
+<P>{</P>
+<P>char * s = "Hello World";</P>
+<P>}</P></DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>viene espresso a livello di token come:</P>
+<P>&#9;</P>
+<B><P>Analizzatore sintattico</P>
+</B><P>L’analizzatore sintattico riceve il flusso di token proveniente dal lexer e costruisce un albero sintattico sulla base della grammatica ridotta del C++ riportata in Appendice A. Rispetto alle specifiche del progetto la grammatica e’ stata ampliata per il supporto delle espressioni e delle dichiarazioni complete, anche complesse, dei tipi di dato, senza pero’ introdurre le strutture o le classi. Esempi di dichiarazioni complesse sono le seguenti:</P>
+<DIR>
+<DIR>
+
+</FONT><FONT FACE="Tahoma" SIZE=1><P>int ivar;</P>
+<P>int (* funcptr)(int , char );</P>
+</DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>alle quali corrisponde il seguente albero sintattico:</P>
+</FONT><FONT FACE="Tahoma" SIZE=1><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=2><P>Nblock</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl ivar</P>
+<P>|- Ndeclstat</P>
+<P> \- Ndecl  i </P>
+<P>  \- Ndirdecl funcptr</P>
+<P>   \- Nptrdecl </P>
+<P>    \- Nfuncdecl </P>
+<P>     |- Nargdecl  i </P>
+<P>     |\- Ndirdecl </P>
+<P>     \- Nargdecl  c </P>
+<P>      \- Ndirdecl </P>
+</FONT><FONT SIZE=2></DIR>
+</DIR>
+
+<P>Ecco altri esempi di dichiarazione complessa con gestione degli errori:</P>
+<DIR>
+<DIR>
+
+</FONT><FONT FACE="Tahoma" SIZE=1><P>int ivar;</P>
+<P>float fvar;</P>
+<P>char * cptr;</P>
+<P>int iarray[100];</P>
+<P>int * iarray2[ivar];&#9;// genera un errore: expected constant</P>
+<P>int * (*arrayptr)[20];</P>
+<P>int (* funcptr)(int , char );</P>
+<P>int (arrayfunc[40])(int, char, int * (*)(int));&#9;// genera un errore: array element, cannot be function</P>
+<P>int (*arrayfunc2[40])(int, char, int * (*)(int));</P>
+</DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>alle quali corrisponde il seguente albero sintattico:</P>
+</FONT><FONT FACE="Tahoma" SIZE=1><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=2><P>Nblock</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl ivar</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  f </P>
+<P>| \- Ndirdecl fvar</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  c </P>
+<P>| \- Ndirdecl cptr</P>
+<P>|  \- Nptrdecl </P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl iarray</P>
+<P>|  \- Narraydecl </P>
+<P>|   \- Nconst int = 100</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl iarray2</P>
+<P>|  \- Narraydecl </P>
+<P>|   |- Nptrdecl </P>
+<P>|   \- "ivar"</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl arrayptr</P>
+<P>|  \- Nptrdecl </P>
+<P>|   \- Narraydecl </P>
+<P>|    |- Nptrdecl </P>
+<P>|    \- Nconst int = 20</P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl funcptr</P>
+<P>|  \- Nptrdecl </P>
+<P>|   \- Nfuncdecl </P>
+<P>|    |- Nargdecl  i </P>
+<P>|    |\- Ndirdecl </P>
+<P>|    \- Nargdecl  c </P>
+<P>|     \- Ndirdecl </P>
+<P>|- Ndeclstat</P>
+<P>|\- Ndecl  i </P>
+<P>| \- Ndirdecl arrayfunc</P>
+<P>|  \- Narraydecl </P>
+<P>|   |- Nfuncdecl </P>
+<P>|   ||- Nargdecl  i </P>
+<P>|   ||\- Ndirdecl </P>
+<P>|   ||- Nargdecl  c </P>
+<P>|   ||\- Ndirdecl </P>
+<P>|   |\- Nargdecl  i </P>
+<P>|   | \- Ndirdecl </P>
+<P>|   |  \- Nptrdecl </P>
+<P>|   |   \- Nfuncdecl </P>
+<P>|   |    \- Nptrdecl </P>
+<P>|   |    \- Nargdecl  i </P>
+<P>|   |     \- Ndirdecl </P>
+<P>|   \- Nconst int = 40</P>
+<P>\- Ndeclstat</P>
+<P> \- Ndecl  i </P>
+<P>  \- Ndirdecl arrayfunc2</P>
+<P>   \- Narraydecl </P>
+<P>    |- Nptrdecl </P>
+<P>    |\- Nfuncdecl </P>
+<P>    | |- Nargdecl  i </P>
+<P>    | |\- Ndirdecl </P>
+<P>    | |- Nargdecl  c </P>
+<P>    | |\- Ndirdecl </P>
+<P>    | \- Nargdecl  i </P>
+<P>    |  \- Ndirdecl </P>
+<P>    |   \- Nptrdecl </P>
+<P>    |    \- Nfuncdecl </P>
+<P>    |     \- Nptrdecl </P>
+<P>    |     \- Nargdecl  i </P>
+<P>    |      \- Ndirdecl </P>
+<P>    \- Nconst int = 40</P>
+</FONT><FONT SIZE=2></DIR>
+</DIR>
+
+<P>Il parser ha una struttura discendente ricorsiva in gran parte delle grammatica tranne nel caso degli operatori binari per i quali e’ stata realizzata una tabella che associa al tipo di token un tipo di nodo dell’albero sintattico con una corretta gestione delle priorita’. </P>
+<P>L’albero prodotto dal parser viene di norma passato all’analizzatore semantico per essere &quot;decorato&quot;, ovvero per estendere le informazioni sintattiche alla luce dell’analisi semantica, in particolare i nodi corrispondenti agli identificatori vengono convertiti in riferimenti a simboli della tabella. </P>
+<P>L’opzione di compilazione –Fp consente di estrarre e stampare a video l’albero di traduzione dopo l’analisi sintattica, con un risultato simile a quello riportato nell’esempio precedente: gran parte dei token del programma sorgente sottoforma di elementi terminali, costituiscono una eccezione alcuni separatori che sono richiesti dalla grammatica e che sarebbero ridondanti nell’albero, ad esempio il ; e le parentesi.</P>
+
+<B><P>Analizzatore semantico</P>
+</B><P>L’analizzatore semantico di questo compilatore esegue diverse operazioni in modo tale da rendere piu’ semplice la stesura del generatore di codice:</P>
+
+<UL>
+<LI>costruisce la tabella di simboli</LI>
+<LI>semplifica le espressioni costanti</LI>
+<LI>effettua il typechecking</LI>
+<LI>ottimizza le espressioni booleane</LI></UL>
+
+<P> Alla fine del processo di analisi semantica l’albero di traduzione risulta pronto per essere passato al generatore di codice, a meno che non siano stati riscontrati errori, in tal caso il compilatore abortisce. Questa fase della compilazione avviene attraverso un’unica visita dell’albero di traduzione ad opera di un istanza della classe Semantic, vengono qui esaminate in breve le varie parti dell’analisi.</P>
+
+<B><P ALIGN="JUSTIFY">Tabella dei simboli</P><DIR>
+<DIR>
+
+</B><P>La tabella dei simboli di questo compilatore, non esiste come entita’ unica e distinta; e’ bensi’ costituita da un albero di tabelle di simboli ognuna legata al blocco di istruzione in cui i simboli sono stati dichiarati. Questa struttura della tabella dei simboli e’ stata resa necessaria dal supporto per i blocchi locali alle funzioni e la dichiarazione di variabili al loro interno; i blocchi, memorizzati come nodi NBlock, sono collegati al padre e contengono una lista di tutti  i blocchi figli, quando occorre un simbolo si parte dal blocco corrente e si risale di livello fino ad arrivare al blocco radice, quello delle variabili a visibilita’ locale che rappresenta l’unita’ di traduzione del programma. </P>
+<P>I simboli sono divisi in due grandi categorie le variabili e le funzioni a causa delle grandi diversita’ esistenti fra questi due tipi di dati. Le due tipologie possiedono degli attributi in comune ed alcuni specifici delle funzioni: </P></DIR>
+</DIR>
+
+
+<UL>
+
+<UL>
+<U><LI>identificatore</U> e’ il nome C++ del simbolo;</LI>
+<U><LI>numero di linea </U> e’ la linea in cui e’ stato dichiarato il simbolo;</LI>
+<U><LI>tipo </U>e’ un oggetto CType associato al tipo che fornisce tutte le informazioni di tipo; esaminando tipo si puo’ scoprire se un simbolo e’ una funzione;</LI>
+<U><LI>simbolo genitore</U> e’ il simbolo padre, al momento indica se una variabile appartiene ad una funzione, in futuro potrebbe indicare l’appartenenza ad una struttura dati;</LI>
+<U><LI>storage type</U> indica quale e’ la modalita’ di memorizzazione di un simbolo, puo’ assumere i valori dell’enumerato StorageType, in particolare: stoEXTERN indica che un simbolo appartiene ad un’altra unita’ di traduzione, stoSTATIC se era presente lo storage modifier static al momento della dichiarazione del simbolo, stoPARAM se una variabile e’ un parametro di una funzione, stoNORMAL negli altri casi, ovvero variabili globali, variabili locali, funzioni;</LI>
+<U><LI>codice</U> collega il simbolo all’albero di traduzione, all’inizializzazione di una variabile, oppure al corpo di una funzione;</LI>
+<U><LI>used</U> e’ un booleano che indica se la variabile e’ stata mai usata all’interno di una funzione; questa prorieta’, valida solo per le variabili locali, permette di rilevare, assieme alla inited, se ci sono stati usi di variabile non ancora inizializzate;</LI>
+<U><LI>inited</U> e’ un booleano che indica se la variabile e’ stata inizializzata o assegnata;</LI>
+<U><LI>offset</U> e’ uno spiazzamento usato dal generatore di codice per memorizzare la posizione di una variabile locale all’interno dello stack;</LI>
+<U><LI>index</U> viene usato dal generatore di codice per Alpha, al momento di dover associare gli argomenti di una funzione a registri o a locazioni di memoria;</LI>
+<U><LI>asmName</U> e’ il nome assembler associato ad un simbolo, potrebbe essere sostituito da un valore calcolato dinamicamente;</LI></UL>
+</UL>
+<DIR>
+<DIR>
+
+<P>Questi sono invece gli attributi aggiuntivi propri di un simbolo Function:</P></DIR>
+</DIR>
+
+
+<UL>
+
+<UL>
+<U><LI>fLeaf</U> indica se una funzione richiama altre funzioni, e’ rilevante ai fini della generazione del codice per processore Alpha;</LI>
+<U><LI>proto</U> indica se il simbolo e’ un prototipo di funzione o una definizione di funzione; nel secondo caso la funzione viene passata al generatore di codice;</LI>
+<U><LI>frameSize</U> dimensione dello stack frame;</LI>
+<U><LI>argSize</U> dimensione in byte dello spazio occupato da </LI></UL>
+</UL>
+
+
+<B><P ALIGN="JUSTIFY">Semplificazione delle espressioni costanti</P><DIR>
+<DIR>
+
+</B><P>L’analisi semantica riconosce operazioni su operandi di tipo costante e li semplifica al loro valore numerico; tale funzionalita’ e’ stata richiesta dalla grammatica per gestire la dimensione degli array nelle dichiarazioni come una costante. Il compilatore effettua anche trasformazioni di tipo prima di applicare l’operazione. </P>
+</DIR>
+</DIR>
+
+<B><P ALIGN="JUSTIFY">Type checking</P><DIR>
+<DIR>
+
+</B><P>I tipi del linguaggio C++ sono stati rappresentati attraversio una classe CType che memorizza tutte le informazioni inerenti ad un tipo, consentendo anche tipi complessi e prototipi di funzione grazie ad una struttura a lista. Per ridurre il consumo di memoria gli oggetti della classe CType vengono memorizzati in una cache e costruiti solo dal gestore della cache, questo introduce anche il comodo vantaggio di poter fare un confronto fra tipi sulla base del semplice puntatore al CType. Da un punto di vista di design pattern un PType puo' essere considerato un handle di un CType, ad handle uguali corrispondono oggetti CType uguali. L’effettivo controllo di tipo viene compiuto dalla classe TypeCheck attraverso funzioni membro quali assignable(…), binary(…) , convert(…):effettuano gli opportuni controlli, generano eccezioni nel caso di operazioni non valide e modificano l’albero di traduzione per convertire gli operandi, attraverso il nodo Ncast.</P>
+<P>Un esempio di come venga rappresentato un tipo complesso e’ quello di un puntatore a funzione: </P><DIR>
+<DIR>
+
+</FONT><FONT FACE="Tahoma" SIZE=1><P>void (*)(int * , int);</P></DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>I tipi in cui sono divisi gli oggetti CType possono essere <I>terminali</I>, ovvero non richiedono sottotipi, oppure <I>non terminali</I>, e vengono specificati dall’enumerato BaseType:</P></DIR>
+</DIR>
+
+
+<UL>
+
+<UL>
+<LI>tVOID, tINT, tFLOAT, tCHAR sono i tipi fondamentali terminali;</LI>
+<LI>tPTR e’ un puntatore che richiede il tipo dell’oggetto puntato;</LI>
+<LI>tARRAY specifica un array e richiede la dimensione ed il tipo degli elementi;</LI>
+<LI>tFUNC e’ una funzione che richiede un tipo di ritorno, un insieme di tipi per gli argomenti ed uno specificatore del tipo di chiamata (stdCall o Cdecl), quest’ultimo usato solo nella generazione di codice per x86;</LI>
+<LI>tELLIPSE e’ valido solo per gli argomenti di funzione e deve essere l’ultimo, inoltre la funzione, nei processori x86 assume convenzione di chiamata Cdecl: serve a gestire le funzioni con numero variabile di argomenti come la printf;</LI></UL>
+</UL>
+<DIR>
+<DIR>
+
+<P>Una estensione del compilatore alle strutture dati e ad i templates richiederebbe l’introduzione di nuovi elementi nella classe CType: tSCOPE per specificare lo scope di un tipo, tSTRUCT per indicare il puntatore al simbolo della struttura, tTEMPLATE per indicare la presenza di un parametro template con un certo nome.</P>
+<P>In fase di stampa dell’albero di traduzione i tipi delle variabili vengono rappresentati attraverso una codifica stringa molto simile a quella usata per il <U>name mangling </U> nei compilatori commerciali: ai tipi fondamentali sono associate dei caratteri i (int), c (char) , f (float) , v(void), mentre ai tipi complessi sono associate </P>
+
+<P> </P>
+<I></DIR>
+</DIR>
+
+</I><B><P ALIGN="JUSTIFY">Espressioni booleane</P><DIR>
+<DIR>
+
+</B><P>La generazione del codice di espressioni booleane richiede l’introduzione di informazioni addizionali, in particolare definiamo <I>descrittore logico</I> la quadrupla &lt; condizione, true labels, false labels, unisci labels &gt;.</P>
+<P>Questo attributo, proprio delle espressioni che generano o usano i booleani, consente di semplificare la logica di gestione delle etichette in questo tipo di espressioni.</P>
+<P>La <I>condizione </I>appartiene ad un enumerato ( nil, true, false, lt, gt, le, ge, eq, ne), ed indica quale e’ il confronto richiesto da una certa espressione, questo formato consente di semplificare la gestione del <I>not logico </I>poiche’ e’ sufficiente invertire il confronto.</P>
+<P>I campi <I>true labels, false labels, unisci labels </I> sono dei set di label che rappresentano rispettivamente, il punto al quale saltare per un risultato vero, un risultato falso, ed in caso di uscita comune, quest’ultima sfruttata dall’if.</P>
+<P>&#9;Le operazioni e le istruzioni interessate a questo attributo sono <I>and logico, or logico, not logico, operatori di confronto, if else, while, for, do...while</I>. Esaminiamo in particolare il caso dell’ or e dell’ and, ricordando che in base all’algebra booleana l’espressione (a and b) = not (not a or not b). Per semplificare ancora la gestione di questi operatori, dobbiamo spezzare un operatore come l’or (cortocircuitato) in due sotto operatori, uno unario ed uno binario, ovvero:</P>
+
+<B><P>(a or b) <FONT FACE="Wingdings">&#232;</FONT>
+ (or1 a) or2 b </P>
+<P>(a and b) <FONT FACE="Wingdings">&#232;</FONT>
+ not ( (or1 not(a) ) or2 not(b))  </P>
+</B>
+<B><P>or1 a&#9;</B>la variabile a e’ una espressione di tipo booleano, ovvero memorizza un descrittore logico, se non e’ gia’ un espressione booleana dovra’ essere convertita tramite un confronto con il valore costante 0. Nel caso a.cond = falso occorre sempre valutare la seconda parte dell’espressione, quindi generiamo:</P>
+<P>&#9;</FONT><FONT FACE="Tahoma" SIZE=2>label a.falso&#9;&#9;&#9;</P>
+<P>&lt; nil, a.vero, *, *&gt;.</P>
+</FONT><FONT SIZE=2><P>Se invece a e’ una normale espressione, generiamo una nuova label L:</P>
+<P>&#9;</FONT><FONT FACE="Tahoma" SIZE=2>jcond a.cond, L</P>
+<P>&#9;label  a.falso</P>
+</FONT><FONT SIZE=2><P>&lt; nil, a.vero U (L), * , * &gt; </P>
+
+<B><P>c or2 b&#9;</B>questo operando in realta’ non genera alcuna istruzione ma lavora solo a livello di descrittori,</P>
+<P>se b.cond = falso allora ritorna </FONT><FONT FACE="Tahoma" SIZE=2>&lt; nil, c.vero U b.vero, b.falso, *&gt; </FONT><FONT SIZE=2>altrimenti </FONT><FONT FACE="Tahoma" SIZE=2>otteniamo &lt; b.cond, b.vero U c.vero, b.falso, *&gt;</P>
+</FONT><FONT SIZE=2>
+<P>Due esempi, uno semplice ed uno piu’ complesso, possono illustrare meglio queste operazioni:</P>
+</FONT><FONT FACE="Tahoma" SIZE=2><P>w = !(k &gt; 2);</P><DIR>
+<DIR>
+
+</FONT><FONT SIZE=2><P></FONT><FONT FACE="Tahoma" SIZE=2>w = !((k &gt; j) &amp;&amp; (k &gt; 0)) || (j &lt; 2);</P></DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>Le istruzioni condizionale vengono generate sfruttando queste informazioni, questi che seguono sono le specifiche della generazione del codice:</P>
+
+<B><P>if (expr) body else body2</B><SUB>opt</SUB><B>&#9; </P>
+</B><I><P>Analisi: trasforma expr in boolean e fa in modo tale rendere non vuota la false; se e’ presente l’else aggiunge una label anche ad unisci</P>
+</I><P>&#9;genera expr</P>
+<P>jcond (not desc.cond), desc.falso</P>
+<P>&#9;label desc.vero</P>
+<P>&#9;genera body</P>
+<B><P>&#9;</B><I>se e’ presente un else</P>
+</I><B><P>&#9;</B>jump desc.unisci</P>
+<P>&#9;label desc.falso</P>
+<P>&#9;genera body2</P>
+<I><P>altrimenti</P>
+<P>&#9;</I>label desc.falso</P>
+<P>&#9;label desc.unisci</P>
+
+<B><P>while (expr) body</P>
+</B><I><P>Analisi</I>: trasforma expr in boolean, fa in modo tale che gli insiemi di label unisci, false e vero non siano nulli</P>
+<B><P>&#9;</B>label desc.unisci</P>
+<P>&#9;genera expr</P>
+<P>&#9;jcond (not desc.cond, desc.falso)</P>
+<P>&#9;genera body</P>
+<P>&#9;jump desc.unisci</P>
+<P>&#9;label desc.falso</P>
+
+<B><P>do body (expr)</P>
+</B><I><P>Analisi</I>: dal punto di vista dell’analisi semantica non vi sono differenze con Nwhile</P>
+<B><P>&#9;</B>label. desc.unisci</P>
+<P>genera body</P>
+<P>genera cond</P>
+<P>jcond (desc.cond, desc.vero)</P>
+<P>&#9;label c.falso</P>
+</DIR>
+</DIR>
+
+<B><P ALIGN="JUSTIFY">Analisi delle espressioni</P><DIR>
+<DIR>
+
+</B><P>L’analizzatore semantico e’ specificato da una lista di proposizioni strutturate su tre campi:</P></DIR>
+</DIR>
+
+<OL>
+
+<OL>
+
+<I><LI>Condizione</I>: la precondizione rispettata dal nodo;</LI>
+<I><LI>Azione di Analisi</I>: sintesi degli attributi e trasformazione dell’albero;</LI>
+<I><LI>Azione di Traduzione:</I> e’ quello che dovra’ fare il generatore di codice, viene inserito in questa lista per completezza. Le operazioni del generatore vengono schematizzate in add, sub, mul… eventualmente seguite da un identificatore del tipo dell’operazione: i(nt) , c(har), p(ointer), f(loat)</LI></OL>
+</OL>
+<DIR>
+<DIR>
+
+<P>Nella specifica seguente bisogna interpretare expr0 come il nodo di tipo espressione che costituisce l’operazione, expr1 e’ il primo operando ed expr2 e’ il secondo ove presente.</P>
+
+<B><P>&amp; expr1 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.lvalue = true</P>
+<I><P>Azione controllo: </I>expr0.tipo = ptr(expr1.tipo);  expr0.lvalue = false</P>
+<I><P>Azione traduzione:</I> non richiede traduzione poiche’ tutte le variabili vengono inserite nello stack come lvalue</P>
+
+<B><P>* expr1 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.tipo = ptr</P>
+<I><P>Azione controllo: </I>expr0.tipo = deref (expr1); expr0.lvalue = true</P>
+<I><P>Azione traduzione: </I>rvalue(expr1)</P>
+
+<B><P>expr1 = expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.lvalue = true; expr2.tipo assignable a expr1.tipo; expr1.tipo non costante</P>
+<I><P>Azione controllo: </I>expr0.lvalue = false; expr0.tipo = expr1.tipo</P>
+<I><P>Azione traduzione: </I>trad of expr2; rvalue(expr2); trad of expr1; store&lt;tipo&gt;</P>
+<I>
+</I><B><P>expr1 [ expr2 ] <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.tipo = ptr o array; expr2.tipo =integral; expr1.lvalue = true</P>
+<I><P>&#9;</I>vale anche l’inverso poiche’ in C++ scrivere a[i] &lt;&gt; a+i &lt;&gt; i + a &lt;&gt; i[a]</P>
+<I><P>Azione controllo: </I>expr0.tipo = deref(expr1 o 2); expr0.lvalue = true</P>
+<I><P>Azione traduzione: </I>trad of expr1; trad of expr2; rvalue(expr2); converti expr2 ad intero; </P>
+<I><P>&#9;</I>genera una costante pari a sizeof(deref(expr1)); muli; addp</P>
+
+<B><P>expr1 + expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>possono valere le combinazioni di tipi (real, real), (integral, integral), (integral, real), (real, integra) oltre a due combinazioni speciali (ptr, int) e (int, ptr).</P>
+<I><P>Azione controllo</I>: <I>expr0.lvalue = false</P>
+</I><P>&#9;(ptr, int)&#9;expr0.tipo = expr1.tipo</P>
+<P>&#9;(int, ptr)&#9;expr0.tipo = expr2.tipo</P>
+<P>&#9;(integral, integral) expr0.tipo = bestof(expr1.tipo, expr2.tipo)</P>
+<P>&#9;(real, real)&#9;expr0.tipo = bestof(expr1.tipo, expr2.tipo)</P>
+<P>&#9;(real, integral) expr0.tipo = expr1.tipo</P>
+<P>&#9;(integral, real) expr0.tipo = expr2.tipo</P>
+<I><P>Azione traduzione: </P>
+</I><P>&#9;(ptr, int)&#9;trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2); cvi</P>
+<P>&#9;&#9;&#9;const sizeof(deref(expr1)); muli; addp</P>
+<P>&#9;(int, ptr)&#9;basta scambiare expr1 con expr2 nella precedente azione</P>
+<P>&#9;(others)&#9;traduciamo il primo e poi il secondo, convertendoli al tipo giusto ed </P>
+<P>infine generando una add&lt;maxtipo&gt;</P>
+
+<B><P>expr1 - expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><P>Pressoche’ identica alla somma eccetto per i puntatori, in questo caso infatti valgono:</P>
+<I><P>Condizione: </I>(ptr, int), (ptr, ptr), nel caso (ptr,ptr) deve valere deref(expr1) == deref(expr2)</P>
+<I><P>Azione controllo: </I>expr0.lvalue = false</P>
+<P>&#9;(ptr, int)&#9;expr0.tipo = expr1.tipo</P>
+<P>&#9;(ptr, ptr)&#9;expr0.tipo = int</P>
+<I><P>Azione traduzione</I>:</P>
+<P>&#9;(ptr, int) &#9;trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2); cvi</P>
+<P>&#9;&#9;&#9;const sizeof(deref(expr1)); muli; subp</P>
+<P>&#9;(ptr, ptr&#9;)&#9;trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2); subp</P>
+<I>
+</I><B><P>expr1 * / % expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.tipo e expr2.tipo scalare</P>
+<I><P>Azione controllo:</I>expr0.tipo = bestof(expr1.tipo, expr2.tipo), expr0.lvalue = false</P>
+<I><P>Azione traduzione: </I>trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2); operazione</P>
+<I>
+</I><B><P>expr1 | &amp; ^ expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1, expr2 devono essre integral</P>
+<I><P>Azione di controllo</I>: expr0.lvalue = false, expr0.tipo = bestof(expr1.tipo, expr2.tipo)</P>
+<I><P>Azione di traduzione</I>: trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2); operazione </P>
+<I>
+</I><B><P>expr1 == != &lt; &gt; &gt;= &lt;= expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>e’ ammissibile ogni confronto (integral | float, integral | float), se inoltre se entrambi sono puntatori e’ ammissibile se deref(expr1.tipo) == deref(expr2).tipo. [se ci fossero le classi varrebbe l’eriditarieta’ e se ci fosse l’overloading occorrerebbe controllare possibili operatori].</P>
+<I><P>Azione di controllo: </I>expr0.lvalue = false; expr0.tipo = booleano; expr0.logic = &lt; cond, *, *, *&gt;</P>
+<I><P>Azione di traduzione: </I>trad of expr1; rvalue(expr1); converti expr1; trad of expr2; rvalue(expr2); </P>
+<P>converti expr2;  genera il confronto CMP.</P>
+<I>
+</I><B><P>expr1 &gt;&gt; &lt;&lt; expr2 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1.tipo = integral; expr2.tipo = integral</P>
+<I><P>Azione di controllo: </I>expr0.lvalue = false; expr0.tipo = expr1.tipo</P>
+<I><P>Azione di traduzione: </I>trad of expr1; rvalue(expr1); trad of expr2; rvalue(expr2);</P>
+<P> &#9;converti expr2; genera lo shift</P>
+<I>
+</I><B><P>expr ( expr1, expr2 ... expr n) <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr.tipo = funzione o expr.tipo = ptr funzione; </P>
+<P>expr non costante; </P>
+<P>deve valere anche il controllo dei tipi dei parametri in rapporto uno ad uno;</P>
+<I><P>Azione di controllo: </I>expr0.lvalue = false; expr0.tipo = <I>tipo ritornato dal prototipo di funzione scelto</P>
+<P>Azione di traduzione: </I>generiamo il codice di ognuno dei parametri, reso lvalue (a meno che l’argomento formale non sia reference o un array), convertito al tipo adeguato, e seguito da arg&lt;tipo&gt;. Per expr puntatore generiamo il codice, ne prendiamo l’rvalue e generiamo callp; se invece e’ una funzione visibile facciamo call symbolo.</P>
+<I>
+</I><B><P>binnot expr1 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione</I>: expr1 sia integral</P>
+<I><P>Azione di controllo</I>: expr0.lvalue = false; expr0.tipo = expr1.tipo</P>
+<I><P>Azione di traduzione: </I>trad of expr1; rvalue(expr1); not&lt;tipo&gt;</P>
+<I>
+</I><B><P>+ expr1 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1 sia scalare</P>
+<I><P>Azione di controllo</I>: <I>expr0 = expr1</P>
+<P>Azione di traduzione: </I>nessuna</P>
+<I>
+</I><B><P>- expr1 <FONT FACE="Wingdings">&#232;</FONT>
+ expr0</P>
+</B><I><P>Condizione: </I>expr1 sia scalare</P>
+<I><P>Azione di controllo: </I>expr0.lvalue = false; expr0.tipo = expr1;</P>
+<P>Azione di traduzione: <I>trad of expr1; rvalue(expr1); neg&lt;tipo&gt;</P>
+
+</I><B><P>cast expr1 type <FONT FACE="Wingdings">&#232;</FONT>
+expr0</P>
+</B><I><P>Condizione: expr1 assegnabile al tipo del cast</P>
+<P>Azione di controllo: </I>expr0.tipo = tipo del cast; expr0.lvalue = false</P>
+<I><P>Azione di traduzione: </I>trad of expr1; rvalue(expr1); cast del valore</P>
+
+<B><P>comma expr1…exprN <FONT FACE="Wingdings">&#232;</FONT>
+expr0</P>
+</B><I><P>Azione di controllo: </I>expr0.tipo = tipo ultima espressione; expr0.lvalue = false</P>
+<I><P>Azione di traduzione: </I>traduce ogni espressione gettandone via il valore, tranne per l’ultima</P>
+</DIR>
+</DIR>
+
+<B><P>Generatore di codice</P>
+</B><P>Il generatore di codice di questo compilatore e’ costituito da una visita dell’albero di traduzione associata alla generazione di linguaggio assembler nel file di output; in entrambe le versioni, quella per Intel x86 e quella per Digital Alpha, la generazione e’ suddivisa in due fasi, una di preparazione ed una di generazione effettiva. La prima fase analizza la tabella dei simboli e genera le dichiarazioni forward, mentre la seconda genera il codice utilizzando la cpu come una macchina a stack. Questo tipo di generazione non e’ molto efficiente ma consente di semplificare molto la codifica: l’uso dei registri del processore avrebbe richiesto un algoritmo di selezione dei registri.</P>
+<P>&#9;Questo e’ un esempio di generazione del codice su un breve programma:</P><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=1><P>int proc(int k, char c, int * p)</P>
+<P>{</P>
+<P>        k = 10 + c;</P>
+<P>        *p = k;</P>
+<P>        return k * 20;</P>
+<P>}</P>
+</FONT><FONT SIZE=1></DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>esto punto viene inserito il corpo della funzione:</P><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=1><P>.386P</P>
+<P>if @Version gt 510</P>
+<P>.model FLAT</P>
+<P>else</P>
+<P>_TEXT&#9;SEGMENT PARA USE32 PUBLIC 'CODE'</P>
+<P>_TEXT&#9;ENDS</P>
+<P>_DATA&#9;SEGMENT DWORD USE32 PUBLIC 'DATA'</P>
+<P>_DATA&#9;ENDS</P>
+<P>CONST&#9;SEGMENT DWORD USE32 PUBLIC 'CONST'</P>
+<P>CONST&#9;ENDS</P>
+<P>_BSS&#9;SEGMENT DWORD USE32 PUBLIC 'BSS'</P>
+<P>_BSS&#9;ENDS</P>
+<P>_TLS&#9;SEGMENT DWORD USE32 PUBLIC 'TLS'</P>
+<P>_TLS&#9;ENDS</P>
+<P>FLAT&#9;GROUP _DATA, CONST, _BSS</P>
+<P>&#9;ASSUME&#9;CS: FLAT, DS: FLAT, SS: FLAT</P>
+<P>endif</P>
+<P>PUBLIC _proc                            ;proc</P>
+<P>_TEXT SEGMENT</P>
+<P>_k$ = 8</P>
+<P>_p$ = 12</P>
+<P>_c$ = 16</P>
+</DIR>
+</DIR>
+
+</FONT><FONT SIZE=2><P>A questo punto viene inserito il corpo della funzione :</FONT><FONT SIZE=1>&#9;</P></FONT>
+<P ALIGN="RIGHT"><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=609>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>_proc PROC NEAR                         </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;ebp                                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov&#9;ebp, esp                            </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;10                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>lea&#9;eax, BYTE PTR _c$[ebp]              </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>; inserimento di una costante literal</FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;eax                                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>movsx&#9;eax, al                           </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<I><FONT FACE="Courier New" SIZE=1><P>; trasformazione da char ad integer</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;eax                                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>add&#9;DWORD PTR [esp], eax                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov&#9;eax, DWORD PTR [esp]                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov&#9;DWORD PTR _k$[ebp], eax             </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>; k = 10 + c </FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;DWORD PTR _k$[ebp]                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov&#9;eax, DWORD PTR [esp]                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<I><FONT FACE="Courier New" SIZE=1><P>; estrazione dell’indirizzo di k</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;ebx                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov DWORD PTR [ebx], eax                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>; *p = k</FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;DWORD PTR _k$[ebp]                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>push&#9;20                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>imul&#9;eax, dword ptr [esp]               </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>mov&#9;dword ptr [esp], eax                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;eax                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">
+<I><FONT FACE="Courier New" SIZE=1><P>; return k * 20;</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>jmp&#9;$uscita                             </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>$uscita:                                </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>pop&#9;ebp                                 </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>ret</FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="48%" VALIGN="TOP">
+<FONT FACE="Courier New" SIZE=1><P>_proc ENDP </FONT></TD>
+<TD WIDTH="52%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+</TABLE>
+</P>
+
+<FONT SIZE=2><P>Dopo possono seguire </FONT><FONT SIZE=1>le altre funzioni definite in questa unita’ di traduzione, in ogni caso il listato e’ terminato con:</P><DIR>
+<DIR>
+
+</FONT><FONT FACE="Courier New" SIZE=1><P>_TEXT ENDS</P>
+<P>END</P>
+</FONT><FONT SIZE=2></DIR>
+</DIR>
+
+<B><P>Struttura dell’albero di traduzione</P><IMG SRC="Image1.gif" WIDTH=172 HEIGHT=307 ALIGN="LEFT" HSPACE=9>
+</B><P>La struttura di albero sintattico, richiesta dalle specifiche del progetto, &egrave; stata estesa per introdurre facilmente la fase di analisi semantica e allo stesso tempo per semplificare le operazioni svolte dal generatore di codice. L’idea che sta alla base di questa struttura ad albero e’ quella di attributo: ogni nodo possiede uno o pi&ugrave; attributi calcolati dalle varie fasi della compilazione, in particolare dall’analisi semantica. L’analisi sintattica, infatti, non fa altro che costruire lo scheletro del programma che si deve tradurre senza poter aggiungere niente sulla semantica, non si conoscono, infatti, i tipi delle variabili n&eacute; quelli delle espressioni. Solo in una fase successiva si pu&ograve; tenere conto degli attributi e valutare i tipi delle espressioni. </P>
+<P>L’albero &egrave; costituito di nodi appartenenti ad una gerarchia di classi C++ in modo tale da associare la memorizzazione degli attributi a delle categorie semantiche, in pratica non ha senso associare un attributo Tipo ad un nodo che memorizza una istruzione IF. Tale gerarchia di classi ha la classe CNode come radice, che fornisce le primitive di visita dell’albero.</P>
+<P>Il diagramma a fianco descrive le relazioni di ereditariet&agrave; che coinvolgono le classi dell’albero di traduzione, ogni classe introduce una diversa categoria semantica. L’uso di tipi C++ per distinguere categorie semantiche pare che introduca una eccessiva complessit&agrave;, in realt&agrave; consente di semplificare notevolmente il codice in molte fasi.</P>
+<P>Le istruzioni del linguaggio C++ vengono rappresentate da classi discendenti della classe CStatement che ha come informazione principale la posizione all’interno dei file sorgenti, al momento il solo numero di linea.  Fra le classi specializzate e’ importante citare la <I>CBlock </I>che rappresenta una generica istruzione composta e memorizza la parte di tabella dei simboli dichiarata al suo interno: una eventuale estensione del compilatore alle strutture dati o alle classi farebbe ancora uso di questa classe per descrivere le dichiarazioni ed i simboli di una struttura. Quella che segue e’ la tabella delle classi specializzate che coprono le principali istruzioni del C++. </P>
+</FONT>
+<P ALIGN="LEFT"><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=576>
+<TR><TD WIDTH="15%" VALIGN="TOP" ROWSPAN=8 HEIGHT=20>
+<B><FONT SIZE=2><P>CBlock</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP" COLSPAN=4 HEIGHT=20>
+<I><FONT SIZE=2><P>Rappresenta l’istruzione composita e memorizza i simboli associati a questa istruzione</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=16>
+<FONT SIZE=2><P>parent</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=16>
+<FONT SIZE=2><P>puntatore al blocco padre</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=16>
+<FONT SIZE=2><P>children</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=16>
+<FONT SIZE=2><P>lista delle istruzioni contenute in un blocco</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>blocks</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>lista dei blocchi figli</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>id</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>identificatore univoco del blocco, viene usato per identificare l’area di memoria delle variabili statiche di un blocco</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>table</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>tabella dei simboli locali al blocco</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>frameSize</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>dimensione dello stack per le variabili locali, calcolata dal generatore</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>nestingLevel</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2 HEIGHT=11>
+<FONT SIZE=2><P>livello di nidificazione di un blocco, usato per il debugging</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" ROWSPAN=6 HEIGHT=16>
+<B><FONT SIZE=2><P>CCondStat</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP" COLSPAN=4 HEIGHT=16>
+<I><FONT SIZE=2><P>Istruzioni condizionali del C++: if, while, do..while, for</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>cond</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=14>
+<FONT SIZE=2><P>espressione della condizione da valutare</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>incr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=14>
+<FONT SIZE=2><P>espressione usata nell’incremento (solo for)</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>block</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=14>
+<FONT SIZE=2><P>istruzione del corpo principale</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>blockII</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=14>
+<FONT SIZE=2><P>istruzione secondaria: body dell’else oppure istruzione di inizializzazione nel for</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>bcond</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=14>
+<FONT SIZE=2><P>espressione della condizione sotto forma di booleana (calcolata dall’a. semantico)</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" ROWSPAN=2 HEIGHT=7>
+<B><FONT SIZE=2><P>CExprStat</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP" COLSPAN=4 HEIGHT=7>
+<I><FONT SIZE=2><P>Una istruzione alla quale e’ associata una espressione (ad esempio return)</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" COLSPAN=3 HEIGHT=8>
+<FONT SIZE=2><P>expr</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" HEIGHT=8>
+<FONT SIZE=2><P>l’espressione</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" ROWSPAN=4 HEIGHT=8>
+<B><FONT SIZE=2><P>CFuncBody</B></FONT></TD>
+<TD WIDTH="85%" VALIGN="TOP" COLSPAN=4 HEIGHT=8>
+<I><FONT SIZE=2><P>L’intestazione di una funzione e le istruzioni che la definiscono</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=6>
+<FONT SIZE=2><P>function</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=6>
+<FONT SIZE=2><P>il simbolo associato alla definizione di funzione</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=6>
+<FONT SIZE=2><P>decl</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=6>
+<FONT SIZE=2><P>l’espressione che costituisce la dichiarazione</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" HEIGHT=6>
+<FONT SIZE=2><P>block</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP" COLSPAN=3 HEIGHT=6>
+<FONT SIZE=2><P>corpo della funzione, anche la tabella dei simboli della funzione e’ memorizzata dentro questo blocco.</FONT></TD>
+</TR>
+</TABLE>
+</P>
+
+<FONT SIZE=2>
+<P>L’altra importante categoria di nodi e’ costituita dalle espressioni, per espressione viene inteso un elemento di un programma C++ caratterizzato da un tipo (puntatore ad un oggetto CType) e da un eventuale attributo <I>lvalue</I>: una specifica piu’ corretta avrebbe dovuto introdurre una classe CTypedNode e da essa derivare la classe CExpression, ma questo avrebbe accresciuto ancora di piu’ la struttura delle classi.  Tra le espressioni distinguiamo fra le dichiarazioni e gli operatori.</P>
+<P>&#9;</P></FONT>
+<P ALIGN="LEFT"><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=576>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2 HEIGHT=17>
+<B><FONT SIZE=2><P>CConstExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5 HEIGHT=17>
+<I><FONT SIZE=2><P>Valore costante presente nel codice o calcolato dall’analisi semantica</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" HEIGHT=9>
+<FONT SIZE=2><P>*</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=4 HEIGHT=9>
+<FONT SIZE=2><P>il valore costante viene memorizzato in ival, cval e fval</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2 HEIGHT=17>
+<B><FONT SIZE=2><P>CIdentifer</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5 HEIGHT=17>
+<I><FONT SIZE=2><P>Identificatore, questa e’ una categoria sintattica calcolata dall’analizzatore sintattico; nella fase semantica viene trasformato in un CSymExpr, associato ad un simbolo</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>ident</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=4 HEIGHT=14>
+<FONT SIZE=2><P>l’identificatore associato all’oggetto</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CSymExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5>
+<I><FONT SIZE=2><P>Espressione associata ad un simbolo, e’ caratterizzata da un simbolo e da tutti gli attributi di una espressione, in particolare lvalue e tipo. Una variabile viene considerata come lvalue se e’ tale e’ l’attributo di questo oggetto.</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" COLSPAN=2>
+<FONT SIZE=2><P>symbol</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=3>
+<FONT SIZE=2><P>oggetto CSsymbol associato</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CUnExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5>
+<I><FONT SIZE=2><P>Espressione o dichiaratore che richiede un nodo come figlio</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" COLSPAN=2>
+<FONT SIZE=2><P>first</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=3>
+<FONT SIZE=2><P>nodo figlio</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CBinExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5>
+<I><FONT SIZE=2><P>Espressione o dichiaratore che richiede due nodi figli</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="14%" VALIGN="TOP" COLSPAN=2>
+<FONT SIZE=2><P>second</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=3>
+<FONT SIZE=2><P>secondo nodo figlio</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=3>
+<B><FONT SIZE=2><P>CDirDecl</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5>
+<I><FONT SIZE=2><P>Dichiaratore diretto, il figlio sinistro specifica i dichiaratori, mentre il destro l’espressione di inizializzazione.</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" COLSPAN=3>
+<FONT SIZE=2><P>ident</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2>
+<FONT SIZE=2><P>identificatore (opzionale) associato alla dichiarazione del simbolo</FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" COLSPAN=3>
+<FONT SIZE=2><P>lineno</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" COLSPAN=2>
+<FONT SIZE=2><P>numero di linea della dichiarazione</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CComma</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=5>
+<I><FONT SIZE=2><P>Contiene piu’ sottofigli, questa e’ una eccezione alla struttura di albero binario, poiche’ un CComma puo’ possedere un &quot;grappolo&quot; di figli. Viene utilizzato nelle dichiarazione di piu’ variabili con la stessa statement, nelle chiamate a funzione, nell’operatore comma e per la dichiarazione degli argomenti di una funzione. E’ stata preferita questa struttura a quella di un albero binario vero e proprio per rendere piu’ snello il codice.</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" COLSPAN=4>
+<FONT SIZE=2><P>children</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP">
+<FONT SIZE=2><P>lista di nodi figli</FONT></TD>
+</TR>
+</TABLE>
+</P>
+
+<FONT SIZE=2>
+<P>Esiste poi un’altra gerarchia di classi discendenti di CExpression usate per la gestione delle espressioni booleane, queste classi permettono di gestire i salti condizionali senza fare uso di variabili temporanee di tipo bool, consentono inoltre di ridurre i salti nell’esecuzione della short-circuit evaluation.</P>
+</FONT>
+<P ALIGN="LEFT"><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=576>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2 HEIGHT=17>
+<B><FONT SIZE=2><P>CBool2Expr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=2 HEIGHT=17>
+<I><FONT SIZE=2><P>Permette di passare da una espressione di tipo booleano ad una di tipo aritmetico, a livello di generazione del codice consiste nel trasformare lo stato di opportuni registri condizionali della macchina in un valore intero </I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" HEIGHT=9>
+<FONT SIZE=2><P>expr</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" HEIGHT=9>
+<FONT SIZE=2><P>espressione associata</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2 HEIGHT=17>
+<B><FONT SIZE=2><P>CBoolNode</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=2 HEIGHT=17>
+<I><FONT SIZE=2><P>Generico nodo booleano, definisce gli attributi comuni a tutte le espressioni booleane rappresentate dal descrittore logico.</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>ldesc</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP" HEIGHT=14>
+<FONT SIZE=2><P>descrittore logico del nodo booleano</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CBoolExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=2>
+<I><FONT SIZE=2><P>Una espressione booleana unaria o binaria</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<FONT SIZE=2><P>sx,dx</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP">
+<FONT SIZE=2><P>espressioni booleane destra e sinistra di questo operando</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CExpr2Bool</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=2>
+<I><FONT SIZE=2><P>Converte una espressione aritmetica in una espressione booleana, effettua l’operazione inversa di CBool2Expr</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<FONT SIZE=2><P>expr</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP">
+<FONT SIZE=2><P>nodo figlio di tipo espressione</FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP" ROWSPAN=2>
+<B><FONT SIZE=2><P>CRelBoolExpr</B></FONT></TD>
+<TD WIDTH="84%" VALIGN="TOP" COLSPAN=2>
+<I><FONT SIZE=2><P>Espressione relazionale, ovvero una espressione che pone una relazione fra i sue due figli</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="15%" VALIGN="TOP">
+<FONT SIZE=2><P>sx, dx</FONT></TD>
+<TD WIDTH="69%" VALIGN="TOP">
+<FONT SIZE=2><P>espressioni aritmetiche destra e sinistra</FONT></TD>
+</TR>
+</TABLE>
+</P>
+
+<B><FONT SIZE=2><P ALIGN="JUSTIFY"></P>
+<P ALIGN="JUSTIFY">Nodi dell’albero</P>
+</B><P>Quello che segue e’ l’elenco dei nodi definiti dal compilatore con la propria descrizione e la classe che memorizza le informazioni sul nodo. Gli esempi dei nodi prodotti dal codice C++ sono riportati di seguito</P>
+</FONT>
+<P ALIGN="LEFT"><TABLE BORDER CELLSPACING=1 CELLPADDING=4 WIDTH=576>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ndeclstat</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CExprStat</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Istruzione di dichiarazione di un simbolo, il figlio e’ collegato ad una espressione dichiarativa</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nargdecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Dichiarazione di argomento di funzione, il figlio sinistro e’ costituito dai dichiaratori (tipo di base e specificatori), il figlio destro, invece, dalla dichiarazione diretta Ndirdecl ovvero da specifice puntatore, array e dall’identificatore</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ndecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CComma</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Dichiarazione, il figlio sinistro contiene la dichiarazione base, mentre la lista specifica i vari Ndirdecl con identificatori e dichiaratori diretti.</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ndirdecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CDirDecl</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Dichiarazione diretta, memorizza l’identificatore della dichiarazione (ident), i dichiaratori diretti (figlio sinistro), e l’espressione di inizializzazione (figlio destro)</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nptrdecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CUnExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>E’ un dichiaratore diretto &quot;puntatore&quot;, il figlio indica il tipo al quale punta</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Narraydecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>E’ un dichiaratore diretto &quot;array&quot;, il figlio sinistro indica la dimensione, in genere un nodo Nconst di classe CConstExpr, il destro, invece, indica il tipo degli elementi</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nfuncdecl</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CComma</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Dichiaratore diretto di funzione, contiene la lista delle dichiarazioni Nargdecl degli argomenti della funzione e i dichiaratori  del tipo di ritorno</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nadd, Nsub, Nmul, Ndiv, Nmod, Nbinxor, Nbinor, Nbinand, Nshl, Nshr, Nassign</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione aritmetica binaria, i figli sono gli operandi</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nlogand</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>E’ un nodo temporaneo che rappresenta l’operatore &amp;&amp;, viene costruito durante l’analisi sintattica e trasformato in un nodo booleano CBoolExpr durante la fase semantica</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Neq, Nneq, Nlt, Ngt, Nlteq, Ngteq </B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>E’ un nodo temporaneo che rappresenta gli operatori relazionali, viene costruito durante l’analisi sintattica e trasformato in un nodo booleano CRelBoolExpr durante la fase semantica</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ncomma</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CComma</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Operatore comma</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ncall</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CComma</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Chiamata a funzione, contiene la lista dei nodi dei parametri attuali</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ncast</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Gestisce il typecasting, il figlio sinistro e’ la dichiarazione del tipo destinazione, mentre il figlio destro e’ l’espressione da convertire</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nlognot</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CUnExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Nodo temporaneo dell’operatore di not logico, questo nodo viene eliminato nella fase di analisi semantica, poiche’ va ad agire semplicemente sul descrittore logico dell’espressione booleana</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nbinnot, Nneg, Nptr, Naddr</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CUnExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Operatore aritmetico unario</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nconst</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CConstExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione costante </I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nident</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CIdentifier</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Identificatore C++, viene convertito dall’analisi semantica in un nodo CSymExpr</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Narray</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBinExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Operatore binario [], il figlio sinistro e’ l’indice, il destro l’oggetto array</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nexpr</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CExprStat</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Istruzione espressione</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nfuncbody</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CFuncBody</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Corpo di una funzione, il figlio sinistro e’ la dichiarazione della funzione, il destro il blocco CBlock principale</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nblock</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBlock</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Istruzione composita</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nreturn </B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CExprStat</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Istruzione di ritorno da funzione</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nwhile, Nfor, Nif, Ndo</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CCondStat</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Istruzione condizionale</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nsymbol</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CSymExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Simbolo</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Norelse1</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBoolExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione booleana unaria generata dall’analisi semantica dividento in due parti un operatore di or logico</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Norelse2</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBoolExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione booleana binaria ottenuta dalla trasformazione di Nlogor</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nexpr2bool</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CExpr2Bool</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Conversione di una espressione aritmetica in una booleana, viene inserito durante l’analisi semantica</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nbool2expr</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBool2Expr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Conversione di una espressione booleana in una aritmetica, viene inserito durante l’analisi semantica</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Ncmp</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CRelBoolExpr</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione booleana relazionale</I></FONT></TD>
+</TR>
+<TR><TD WIDTH="16%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Nboolconst</B></FONT></TD>
+<TD WIDTH="13%" VALIGN="TOP">
+<FONT SIZE=2><P>CBoolNode</FONT></TD>
+<TD WIDTH="70%" VALIGN="TOP">
+<I><FONT SIZE=2><P>Espressione booleana costante, viene inserita dall’analisi semantica quando viene convertita una espressione aritmetica costante in una espressione booleana</I></FONT></TD>
+</TR>
+</TABLE>
+</P>
+
+<FONT SIZE=2>
+</FONT><FONT FACE="Courier New" SIZE=2><P>&nbsp;</P>
+</FONT><B><FONT SIZE=2><P>Appendice A</P>
+</B><P>La grammatica usata per questo compilatore e’ un adattamento di quella del C++, con alcune variazioni per aumentare la leggibilit&agrave;, in paricolare scriver <I>nonterminale</I>-clist vuol dire che sono richiesti uno o piu’ <I>nonterminali</I> separati da virgola, mentre una <I>nonterminale-</I>list richiede una sequenza di uno o piu’ <I>nonterminali</I> separati da spazi.</P>
+</FONT>
+<P ALIGN="CENTER"><CENTER><TABLE CELLSPACING=0 BORDER=0 CELLPADDING=4 WIDTH=581>
+<TR><TD WIDTH="39%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Grammatica delle dichiarazioni</B></FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Albero sintattico generato</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="39%" VALIGN="TOP" ROWSPAN=2>
+<FONT SIZE=2><P>Declaration:</P><DIR>
+<DIR>
+
+<P>decl-spec dirdecl-clist </DIR>
+</DIR>
+</FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ndecl(decl-spec, lista di dirdecl) di classe CComma</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="39%" VALIGN="TOP" ROWSPAN=2><DIR>
+<DIR>
+
+<FONT SIZE=2><P>Dirdecl:</P>
+<P>declarator [ = expression ]</DIR>
+</DIR>
+</FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ndirdecl(declarator, initexpression) di classe CdirDecl</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P>(le init expression del C++ non sono ancora considerate )</FONT></TD>
+</TR>
+<TR><TD WIDTH="39%" VALIGN="TOP" ROWSPAN=7><DIR>
+<DIR>
+
+<FONT SIZE=2><P>Declarator:</P>
+<P>* declarator</P>
+<P>declarator [ expression ]</P>
+<P>declarator ( functionarg-clist ) </P>
+<P>( declarator )</P>
+<P>identifer </P>
+<P><FONT FACE="Symbol">&#101;</FONT>
+</DIR>
+</DIR>
+</FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nptrdecl(declarator) di classe CUnExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Narraydecl(declarator, expression) di classe CbinExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nfuncdecl(declarator, lista di functionarg) di classe Ccomma</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nident di classe Cidentifer</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="39%" VALIGN="TOP" ROWSPAN=3><DIR>
+<DIR>
+
+<FONT SIZE=2><P>Functionarg:</P>
+<P>decl-spec dirdecl</P>
+<P>&#9;…</DIR>
+</DIR>
+</FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P> </FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nargdecl (decl-spec, dirdecl) di classe CbinExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nellipse</FONT></TD>
+</TR>
+<TR><TD WIDTH="39%" VALIGN="TOP" ROWSPAN=2><DIR>
+<DIR>
+
+<FONT SIZE=2><P>Decl-spec:</P>
+<P>primitive-type [ static | extern ]</DIR>
+</DIR>
+</FONT></TD>
+<TD WIDTH="61%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="61%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nstatic / Nextern di classe CUnNode</FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2>
+<P>Nella definizione di declarator e’ stato inserito il simbolo vuoto per unificare quelle che in C++ sono le declarations e le abstract declarations: una abstract declaration e’ una dichiarazione priva di nome, come un argomento di funzione nel prototipo. Non sono ammessi un array senza dimensione.</P>
+</FONT>
+<P ALIGN="CENTER"><CENTER><TABLE CELLSPACING=0 BORDER=0 CELLPADDING=4 WIDTH=585>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Grammatica dell espressioni</B></FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Albero sintattico generato</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>expression:</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>binary-expression</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP" ROWSPAN=2>
+<FONT SIZE=2><P>comma-expression:</P>
+<P>expression-clist</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ncomma (lista di expression ) di classe CComma</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>binary-expression:</P>
+<P>Gli operatori binari del C++ con la precedenza e l'associativita' del C++.</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ nodeType ( expression, expression) di classe CBinExpr</P>
+<P>I nodi sono: Nassign, Nshl, Nshr, Nlt, Ngt, Ngteq, Nlteq, Nlogor, Nlogand, Nbinor, Nbinxor, Nbinand, Neq, Nneq, Nadd, Nsub, Nmul, Ndiv, Nmod</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>primary:</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;element [ expression ]</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Narray ( element, expression ) di classe CBinExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;element ( comma-expression )</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ncall (element, comma-expression) di classe CBinExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>element:</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;ident</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nident di classe CIdentifer</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;const</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nconst di classe CConstExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;* primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nptr(primary) di classe CUnExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;! primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nlognot(primary) di classe CUnExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>tilde  primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nbinnot(primary) di classe CUnExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;- primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nneg(primary) di classe CUnExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;+ primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P>primary</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;( declaration ) primary</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ncast (declaration, primary) di classe CBinExpr</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;( comma-expression )</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P>comma-expression</FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2>
+<P>&nbsp;</P>
+<P>&nbsp;</P>
+<P>&nbsp;</P></FONT>
+<P ALIGN="CENTER"><CENTER><TABLE CELLSPACING=0 BORDER=0 CELLPADDING=4 WIDTH=585>
+<TR><TD WIDTH="47%" VALIGN="TOP" ROWSPAN=10>
+<B><FONT SIZE=2><P>Grammatica delle istruzioni</P>
+</B><P>statement:</P>
+<P>&#9;while(expression) statement</P>
+<P>&#9;if ( expression ) statement [else statement ]</P>
+<P>&#9;do statement while( expression ) ;</P>
+<P>&#9;expression ;</P>
+<P>&#9;declaration ;</P>
+<P>&#9;return expression ;</P>
+<P>&#9;;</P>
+<P>&#9;{ statatement-list }</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Albero sintattico generato</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nwhile(expression, statement) di classe CcondStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nif(expression, statement, statement) di classe CcondStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ndo(expression, statement) di classe CCondStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nexpr ( expression) di classe CExprStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ndeclstat (declaration ) di classe CExprStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nreturn (expression) di classe CExprStat</FONT></TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nblock ( lista di statement) di classe CBlock</FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2></FONT>
+<P ALIGN="CENTER"><CENTER><TABLE CELLSPACING=0 BORDER=0 CELLPADDING=4 WIDTH=585>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>Grammatica <B>dell’unita’ di traduzione</B></FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<B><FONT SIZE=2><P>Albero sintattico</B></FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>Translation-unit:</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nblock (lista di istruzioni) di classe CBlock</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>translation-unit-item-list</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>Translation-unit-item:</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">&nbsp;</TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;declaration block-statement</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Nfuncbody (declaration, statement ) di classe CFuncBody ( la declaration deve essere una sola dichiarazione di un prototipo di funzione con identificatore)</FONT></TD>
+</TR>
+<TR><TD WIDTH="47%" VALIGN="TOP">
+<FONT SIZE=2><P>&#9;declaration ;</FONT></TD>
+<TD WIDTH="53%" VALIGN="TOP">
+<FONT SIZE=2><P><FONT FACE="Wingdings">&#224;</FONT>
+ Ndeclstat(declaration) di classe CExprStat</FONT></TD>
+</TR>
+</TABLE>
+</CENTER></P>
+
+<FONT SIZE=2>
+<B><P>Appendice B – sorgenti</P>
+</B><P>I sorgenti di questo progetto possono essere cosi’ raggruppati:</P>
+
+<UL>
+<LI>strumenti di base:</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>slista.h&#9;lista semplicemente linkata</LI>
+<LI>visitor.h&#9;supporto per il design pattern visitor (macro)</LI>
+<LI>pair.h&#9;tipi di base per le mappe associative</LI>
+<LI>natset.h&#9;dichiarazione del tipo set di naturali </LI>
+<LI>natset.cpp&#9;implementazione del tipo set di naturali</LI>
+<LI>mappa.h&#9;mappa associativa basata su albero binario</LI>
+<LI>htable.h&#9;tabella hash (dichiarazione)</LI>
+<LI>htable_impl.h&#9;tabella hash (implementazione)</LI>
+<LI>format.h&#9;manipolatore di stream simile a printf</LI>
+<LI>format_impl.h&#9;implementazione</LI>
+<LI>dvector.h&#9;vettori a dimensione variabile</LI>
+<LI>btree.h&#9;albero binario non bilanciato</LI>
+<LI>autoptr.h&#9;puntatori con run time check</LI></UL>
+</UL>
+
+
+<UL>
+<LI>scheletro</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>errors.h&#9;dichiarazioni delle eccezioni per gli errori</LI>
+<LI>errortable.h&#9;tabella degli identificatori delle eccezioni</LI>
+<LI>cmm.h&#9;dichiarazione classe CMM, il compilatore</LI>
+<LI>cmm.cpp&#9;implementazione di CMM (stampa degli errori)</LI>
+<LI>node.h&#9;dichiarazione albero di traduzione</LI>
+<LI>node.cpp&#9;implementazione albero di traduzione</LI>
+<LI>bools.h&#9;dichiarazione nodi booleani dell’albero</LI>
+<LI>xmlout.cpp&#9;stampa dell’albero di traduzione in XML (eXtended Markup Language)</LI>
+<LI>symbol.h&#9;dichiarazione dei simboli</LI>
+<LI>types.h&#9;dichiarazione della classe CType</LI>
+<LI>types.cpp&#9;implementazione di CType</LI>
+<LI>main.cpp&#9;modulo principale, analisi argomenti ed esecuzione</LI></UL>
+</UL>
+
+
+<UL>
+<LI>analisi lessicale</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>scan.h&#9;dichiarazione dell’analizzatore lessicale CScan</LI>
+<LI>scan.cpp&#9;implementazione class CScan</LI>
+<LI>token.h&#9;dichiarazione della classe token</LI>
+<LI>token.cpp&#9;implementazione token (stampa)</LI>
+<LI>preproc.h&#9;dichiarazione del preprocessore</LI>
+<LI>preproc.cpp&#9;implementazione del preprocessore</LI>
+<LI>keywords.h&#9;tabella delle parole chiave</LI></UL>
+</UL>
+
+
+<UL>
+<LI>analisi sintattica</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>parser.h&#9;dichiarazione della classe CParser</LI>
+<LI>parsedecl.cpp&#9;parser di dichiarazioni</LI>
+<LI>parse_expr.cpp&#9;parser di espressioni</LI>
+<LI>nparser.cpp&#9;modulo principale del parser</LI></UL>
+</UL>
+
+
+<UL>
+<LI>analisi semantica</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>semantic.h&#9;analizzatore semantico</LI>
+<LI>semantic.cpp&#9;analizzatore semantico</LI></UL>
+</UL>
+
+
+<UL>
+<LI>generatore del codice</LI></UL>
+
+
+<UL>
+
+<UL>
+<LI>gencode.h&#9;dichiarazione generatore di codice x86</LI>
+<LI>gencode.cpp&#9;implementazione generatore x86</LI>
+<LI>axpgen.h&#9;dichiarazione generatoere di codice</LI>
+<LI>axpgen.cpp&#9;implementazione del generatore di codice</LI></UL>
+</UL>
+
+</FONT></BODY>
+</HTML>

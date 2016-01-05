@@ -1,0 +1,24 @@
+<cppsource source="addition.cxx"><BODY line="0"><DECL><decl:dir id="func"><FUNCDECL><ARGDECL>
+<decl:dir id="k"></decl:dir></ARGDECL>
+</FUNCDECL></decl:dir>
+</DECL><istr:block line="1">
+<DECLSTAT line="2"><DECL><decl:dir id="p1"></decl:dir>
+<decl:dir id="p2"></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT line="3"><DECL><decl:dir id="j"></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT line="4"><DECL><decl:dir id="p3"></decl:dir>
+</DECL></DECLSTAT>
+<istr:expr line="7"><assign>
+<ident id="p1"/><ADD>
+<const type = "i" value="22"/><const type = "i" value="1"/></ADD></assign></istr:expr>
+<istr:expr line="8"><assign>
+<ident id="p1"/><ADD>
+<ident id="p2"/><ident id="j"/></ADD></assign></istr:expr>
+<istr:expr line="9"><assign>
+<ident id="j"/><SUB>
+<ident id="p2"/><ident id="p1"/></SUB></assign></istr:expr>
+<istr:return line="9"><ident id="j"/></istr:return>
+</istr:block>
+</BODY>
+</cppsource>

@@ -1,0 +1,15 @@
+Global symbols
+main function ()v
+--locals 32 bytes
+nl var i
+nw var i
+EOF var i
+state var i
+c var i
+OUT var i
+nc var i
+IN var i
+--
+printf function (*c?)v
+getchar function ()i
+Code Generation...

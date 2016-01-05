@@ -1,0 +1,114 @@
+STRUTTURE DATI PER IL Compilatore.
+
+Struttura dati: HashTable 
+Utilizzo: tabelle degli identificatori e delle costanti
+Questa struttura dati e' un template con parametri il tipo della
+chiave ed il tipo di dato memorizzato al suo interno. Internamente
+sfrutta il metodo della concatenazione.
+
+HashTable(int initialCapacity, float loadFactor );
+HashTable(const HashTable&);
+HashTable& operator= (const HashTable&);
+void put(const Key&, const T&);
+T& get(const Key&k);
+const T& get(const Key& k) const;
+void clear();
+int size();
+bool isEmpty();
+void remove(const Key&k);
+bool contains(const T&v);
+bool containsKey(const Key&k);
+    
+Per scorrere la tabella usiamo un oggetto di classe 
+HashTable::Enumeration, ritornato dalla funzione membro values() e 
+keys().
+
+Una Enumeration ha come funzioni membro:
+
+bool hasMoreElements()
+const Key& getKey()
+const T& getValue()
+nextElement();
+
+Non Possiede Iteratori.
+Inoltre richiede la presenza di una funzione 
+	int hashValue(const Key&)
+NB. sono gia' definite funzioni per int, float,char e double,float
+
+
+Struttura Dati: NatSet
+Descrizione: small set di naturali (al piu' sizeof(ulong)*8 elementi).
+Molto veloce nelle operazioni.
+    NatSet() 
+    NatSet(unsigned  int p)  
+    NatSet operator* (const NatSet& r) const 
+    NatSet operator+ (const NatSet& r) const 
+    NatSet operator- (const NatSet& r) const  
+    NatSet& operator += (const NatSet&r) 
+    NatSet& operator*= (const NatSet&r)  
+    NatSet& operator-= (const NatSet&r)  
+
+    bool operator== (const NatSet&r) const {return m_set == r.m_set;}
+    bool operator!= (const NatSet&r) const {return m_set != r.m_set;}
+    bool operator>= (const NatSet&r) const {
+    bool operator<= (const NatSet&r)
+
+
+bool test(int pos) const;
+bool any() const ; 	
+bool none() 
+bool all() const;	
+
+    unsigned int capacity()
+
+    Per iterare in questa struttura dati usiamo:
+     begin, next, ok con una variabile int.
+    Il primo posizione l'indice, il secondo avanza e torna
+    il successivo presente, il terzo indica se non ce ne sono piu'.
+
+    void begin(unsigned int&n ) const;
+    bool ok(unsigned int n) const;
+    int next(unsigned int &n);
+
+    operator bool() const;	// vero se non vuota 
+    int size() const;		// numero di elementi
+    
+NB: per passarlo ad un contenitore STL, basta aggiungere, 
+    insert, remove, begin()..end() in cui l'iteratore e' proprio
+    l'intero next.
+
+Struttura: BitSet
+Descrizione: set di interi, a dimensione qualsiasi.
+
+BitSet(const char*);
+BitSet(unsigned  l);
+BitSet();	
+~BitSet();
+reference operator[] (int pos);
+constreference operator[] (int pos) const;
+BitSet& operator&= (const BitSet&r);
+BitSet& operator|= (const BitSet&r);
+BitSet& operator^= (const BitSet&r);
+BitSet& operator<<= (int n);
+BitSet& operator>>= (int n);
+void set();
+void set(int pos);
+void reset();
+void reset(int pos);
+void flip();
+void flip(int pos);
+BitSet operator~() const;
+BitSet operator << (int n) const;
+BitSet operator >> (int n) const;
+unsigned  to_uint() const;
+char * to_string() const;
+bool operator== (const BitSet& r) const;
+bool operator!= (const BitSet& r) const;
+bool test(int pos) const;
+bool any() const ; 	
+bool none() 
+bool all() const;	
+
+La semantica di NatSet e BitSet e' leggermente diversa, col primo
+possiamo scrivere NatSet(1) + NatSet(16) => (1,16)
+Col secondo e' sufficiente NatSet(0x11)

@@ -1,0 +1,60 @@
+	TITLE	tryalloc.cxx
+	.386P
+include listing.inc
+if @Version gt 510
+.model FLAT
+else
+_TEXT	SEGMENT PARA USE32 PUBLIC 'CODE'
+_TEXT	ENDS
+_DATA	SEGMENT DWORD USE32 PUBLIC 'DATA'
+_DATA	ENDS
+CONST	SEGMENT DWORD USE32 PUBLIC 'CONST'
+CONST	ENDS
+_BSS	SEGMENT DWORD USE32 PUBLIC 'BSS'
+_BSS	ENDS
+_TLS	SEGMENT DWORD USE32 PUBLIC 'TLS'
+_TLS	ENDS
+FLAT	GROUP _DATA, CONST, _BSS
+	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT
+endif
+PUBLIC	?f@@YAXXZ					; f
+EXTRN	??2@YAPAXI@Z:NEAR				; operator new
+EXTRN	__fltused:NEAR
+CONST	SEGMENT
+$T173	DD	03f800000r			; 1
+CONST	ENDS
+_TEXT	SEGMENT
+_c$ = -4
+_f$ = -8
+_cpp$ = -12
+?f@@YAXXZ PROC NEAR					; f
+; File tryalloc.cxx
+; Line 2
+  00000	55		 push	 ebp
+  00001	8b ec		 mov	 ebp, esp
+  00003	83 ec 0c	 sub	 esp, 12			; 0000000cH
+; Line 3
+  00006	6a 64		 push	 100			; 00000064H
+  00008	e8 00 00 00 00	 call	 ??2@YAPAXI@Z		; operator new
+  0000d	83 c4 04	 add	 esp, 4
+  00010	89 45 fc	 mov	 DWORD PTR _c$[ebp], eax
+; Line 4
+  00013	c7 45 f8 00 00
+	00 00		 mov	 DWORD PTR _f$[ebp], 0
+; Line 5
+  0001a	6a 01		 push	 1
+  0001c	e8 00 00 00 00	 call	 ??2@YAPAXI@Z		; operator new
+  00021	83 c4 04	 add	 esp, 4
+  00024	89 45 f4	 mov	 DWORD PTR _cpp$[ebp], eax
+; Line 6
+  00027	d9 45 f8	 fld	 DWORD PTR _f$[ebp]
+  0002a	d8 05 00 00 00
+	00		 fadd	 DWORD PTR $T173
+  00030	d9 5d f8	 fstp	 DWORD PTR _f$[ebp]
+; Line 7
+  00033	8b e5		 mov	 esp, ebp
+  00035	5d		 pop	 ebp
+  00036	c3		 ret	 0
+?f@@YAXXZ ENDP						; f
+_TEXT	ENDS
+END

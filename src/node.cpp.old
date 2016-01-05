@@ -1,0 +1,352 @@
+#include <iostream.h>
+ #include "node.h"
+#include "bools.h"
+// Funzioni di output dei nodi
+
+int CBlock::globalid = 0;
+// indicizzata per nodo
+char * nodeTable[] = {
+	"Ndecl",		// dichiarazione, binary: sx = declspec, dx = lista dirdecl
+	"Nargdecl",	// dichiarazione di argomento di funzione.
+	"Ndirdecl",	// declarator, binary: sx = declarators, dx = init list
+	"Nptrdecl",		// puntatore, CUnExpr
+	"Narraydecl",		// array, CBinExpe: sx = size expr, dx = argument
+	"Nfuncdecl",	// function, CBinList: sx = declarators del ritorno, dx =lista arg
+	"Nstatic",
+	"Nextern",
+	"Nellipse",
+	"Nadd", "Nsub", "Nmul", "Ndiv", "Nmod", "Nlogand", "Nbinor", "Nbinxor",
+	"Nbinand", "Neq", "Nneq", "Nlt", "Ngt", "Nlteq", "Ngteq", "Nshl", "Nshr", 
+	"Nassign", "Ncomma", "Nlogor","Ncall", "Ncast", 
+	"Nlognot", "Nbinnot", "Nneg","Nconst","Nident","Narray",
+	"Nptr", "Naddr",
+
+	"Nexpr","Ndeclstat", "Nfuncbody", "Nblock", "Nreturn", "Nwhile", "Ndo",
+	"Nif", "Nfor", "Nsymbol",
+	"Norelse1", "Norelse2",  "Nexpr2bool", "Nbool2expr","Ncmp",
+
+};
+
+// tabella usata per gli errori
+char * nodeTable2[] = {
+	"",		// dichiarazione, binary: sx = declspec, dx = lista dirdecl
+	"",	// dichiarazione di argomento di funzione.
+	"",	// declarator, binary: sx = declarators, dx = init list
+	"",		// puntatore, CUnExpr
+	"",		// array, CBinExpe: sx = size expr, dx = argument
+	"",	// function, CBinList: sx = declarators del ritorno, dx =lista arg
+	"static",
+	"extern",
+	"...",
+	"+", "-", "*", "/", "%", "&&", "|", "^",
+	"&", "==", "!=", "<", ">", "<=", ">=", "<<", ">>", 
+	"=", "Ncomma", "Nlogor","Ncall", "Ncast", 
+	"!", "~", "-","","","[]",
+	"*", "&",
+
+	"","", "", "", "return", "while", "do",
+	"if", "for", "",
+	"", "",  "", "","",
+
+};
+
+
+// Gestione della visualizzazione dell'albero:
+// 
+//  C:
+//  |- Dev
+//	||- Jdk
+//  |||- Bin
+//  ||\- Lib  
+//  
+//
+// Level: 0x80000000 indica che e' l'ultimo dei figli del padre 
+// i bit settati indicano che deve aggiungere una stanghetta
+//
+// CHILD(level)
+// LASTCHILD(level): in tal caso 
+// 
+const int MASK =0x80000000;
+
+static writeData CHILD(writeData lev) 
+{
+	writeData wd;
+	wd.mask = (lev.mask & ~MASK);
+	wd.level = lev.level+1;
+	if(!(lev.mask & MASK)) 
+		wd.mask |= 1;
+	wd.mask <<= 1;
+	return wd;
+	
+}
+
+static writeData LASTCHILD(writeData lev)
+{
+	writeData wd = CHILD(lev);
+	wd.mask |= MASK;
+	return wd;
+}
+
+char * CNode::stringOf(NodeType op)
+{
+	return nodeTable2[op];
+}
+
+ostream & spacer(ostream & o, writeData level)
+{
+// 	for(int i= 0;i< n; i++) o << ' ';
+	int k = level.mask & ~MASK;
+	if(level.level > 0) {
+	int m = 1 << (level.level-1);
+	while(m > 1) {
+		o << ((k & m) ? '|' : ' ');
+		m >>= 1;
+	}
+	o << ((level.mask & MASK) ? '\\' : '|');
+	o << "- ";
+	}
+	return o;
+}
+
+void CNode::write(ostream & o, writeData level)
+{
+	spacer(o,level);
+	o << nodeTable[nt] << endl;
+	if(left()) 
+		left()->write(o, right() ? CHILD(level) : LASTCHILD(level));
+	if(right())
+		right()->write(o, LASTCHILD(level));
+}
+
+void CDirDecl::write(ostream& o, writeData level)
+{
+	assert(node() == Ndirdecl);
+	spacer(o,level);
+	o << nodeTable[node()] << " " << (identifer()? identifer() : "") << '\n';
+	if(left()) 
+		left()->write(o, right() ? CHILD(level) : LASTCHILD(level));
+	if(right())
+		right()->write(o, LASTCHILD(level));
+}
+
+void CComma::write(ostream & o, writeData level)
+{
+	CExpression::write(o, level);
+	iterator it = begin();
+	while(it != end()) {
+		assert(*it);
+		iterator tmp = it;
+		it++;		
+		(*tmp)->write(o, it == end() ? LASTCHILD(level) : CHILD(level));		
+	}
+}
+
+
+CConstExpr::CConstExpr(int i) :CExpression(Nconst)
+{
+	//cvalue(true);
+	ival = i;
+	ptipo = CType::Int();
+}
+
+CConstExpr::CConstExpr(char c):CExpression(Nconst)
+{
+//	cvalue(true);
+	cval = c;
+	ptipo = CType::Char();
+}
+
+CConstExpr::CConstExpr(float f):CExpression(Nconst)
+{
+//	cvalue(true);
+	fval = f;
+	ptipo = CType::Float();
+}
+
+CConstExpr::CConstExpr(const char * s, int len):CExpression(Nconst)
+{
+//	cvalue(true);
+	strval.cp = s;
+	strval.len = len;
+	ptipo = (CType::Char())->ptr();
+}
+
+void CConstExpr::write(ostream & o, writeData level)
+{
+	spacer(o, level);
+	o << "Nconst ";
+	switch(ptipo->getType()) {
+	case tINT: o << "int = " << ival; break;
+	case tCHAR: o << "char = " << cval; break;
+	case tFLOAT : o << "float = " << fval; break;
+	case tPTR: o << "string"; break;
+	default:
+		cerr << "ERRORE INTERNO!";
+		break;
+	}
+	o << endl;
+}
+
+void CIdentifer::write(ostream & o, writeData level)
+{
+	spacer(o, level);
+	o << "\"" << (identifer()? identifer() : "") << "\"" << endl;
+}
+
+CBlock::CBlock(lineRef no, CBlock*p): CStatement(Nblock,no)
+	{
+		m_frameSize = 0;
+		m_parent = p;
+		m_nestingLevel = p ? m_parent->level()+1 : 0;
+		m_blockID = globalid++;
+	}
+
+void CBlock::write(ostream& o, writeData level)
+{
+	spacer(o,level);
+	o << nodeTable[node()] << endl;
+
+	iterator it = begin();
+	while(it != end()) {
+		assert(*it);
+		iterator tmp = it;
+		it++;
+		(*tmp)->write(o, it == end() ? LASTCHILD(level) : CHILD(level));		
+	}
+}
+
+CStatement::CStatement(NodeType nt, lineRef no) : CNode(nt), lineno(no){}
+
+CExprStat::CExprStat(NodeType nt, PExpression e,  lineRef num) : CStatement(nt, num)
+	{
+		expr = e;
+		assert(nt == Nreturn || nt == Ndeclstat || nt == Nexpr);
+		if(nt == Ndeclstat) assert(e->node() == Ndecl);
+	}
+
+// Function name	: CCondStat::mknode
+// Description	    : creates a node for if, while, for, do..while
+//	 statements.
+// Return type		: CCondStat* 
+// Argument         : NodeType nt
+// Argument         : int lineno
+// Argument         : PExpression e
+// Argument         : PStatement s1 = 0
+// Argument         : PStatement s2 = 0
+CCondStat* CCondStat::mknode(NodeType nt, int lineno, PExpression e, PStatement s1 , PStatement s2 )
+{
+	assert(nt == Nif || nt == Nwhile);
+	CCondStat* p = new CCondStat(nt, lineno);
+	p->cond    = e;
+	p->block   = s1;
+	p->blockII = s2;
+	return p;
+}
+
+CCondStat* CCondStat::mknode_for(int lineno, 
+	PStatement before,
+	PExpression cond,
+	PExpression incr,
+	PStatement body)
+{
+	CCondStat* p = new CCondStat(Nfor, lineno);
+	p->cond    = cond;
+	p->block   = before;
+	p->blockII = body;
+	p->incr	   = incr;
+	return p;
+}
+
+void CCondStat::write(ostream& o, writeData level)
+{
+	spacer(o,level);
+	o << nodeTable[node()] << endl;
+	
+	switch(node()) {
+	case Nif:
+		assert(bcond);
+		assert(block);
+		bcond->write(o, CHILD(level));
+		block->write(o, blockII ? CHILD(level):LASTCHILD(level));
+		if(blockII) blockII->write(o, LASTCHILD(level));
+		break;
+	case Nwhile:
+		assert(bcond && block);
+		bcond->write(o, CHILD(level));
+		block->write(o, LASTCHILD(level));
+		break;
+	default:
+		return;
+	}
+
+}
+
+CSymExpr::CSymExpr(CSymbol * sym) : CExpression(Nsymbol), m_symbol(sym) 
+		{ptipo = sym->getTipo();}
+	
+void CSymExpr::write(ostream& o, writeData level)
+{
+	assert(m_symbol != 0);
+	spacer(o, level);
+	o << "\"" << m_symbol->getNome() << "\" " << *(m_symbol->getTipo())<< "L \n";
+}
+
+CFuncBody::CFuncBody(int no, PBlock parent, PExpression e ) : 
+	CStatement(Nfuncbody,no)
+	{
+		assert(e && *e == Ndecl);
+		decl = e;
+	}
+	
+
+void CExpression::write(ostream & o, writeData level)
+{
+	spacer(o,level);
+	o << nodeTable[*this] << " ";
+	if(ptipo) {
+		o << " " << *ptipo << " ";
+	}
+	if(lvalue()) { o << "L"; }
+	if(cvalue()) { o << "C"; }
+	o << endl;
+	if(left()) 
+		left()->write(o, right() ? CHILD(level) : LASTCHILD(level));
+	if(right())
+		right()->write(o, LASTCHILD(level));
+}
+
+#include "bools.h"
+
+void CBoolNode::write(ostream & o, writeData level)
+{
+static char * condt[] = {"cNIL", "cTRUE", "cFALSE", "cLT", 
+	"cGT", "cLE", "cGE", "cEQ", "cNE"};
+
+	spacer(o, level);
+	o << nodeTable[*this] << "< ";
+	o << condt[CondType(ldesc.condizione)] << ", ";
+	
+	// Qui c'e' il set
+	
+	if(ldesc.vero.empty())
+		o << '*';
+	else
+		o << ldesc.vero;
+	o << ',';
+	if(ldesc.falso.empty())
+		o << '*';
+	else
+		o << ldesc.falso;
+	o << ',';
+	if(ldesc.unisci.empty())
+		o << '*';
+	else
+		o << ldesc.unisci;
+	o << '>' << endl;
+	if(left()) 
+		left()->write(o, right() ? CHILD(level) : LASTCHILD(level));
+	if(right())
+		right()->write(o, LASTCHILD(level));
+}
+
+

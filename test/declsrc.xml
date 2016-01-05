@@ -1,0 +1,38 @@
+<cppsource source="declsrc.cxx"><DECLSTAT><DECL><decl:dir id="glo"></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT><DECL><decl:dir id="a"><ARRAYDECL>
+<const type = "i" value="11"/></ARRAYDECL></decl:dir>
+<decl:dir id="hello"></decl:dir>
+<decl:dir id="pippo"><PTRDECL>
+</PTRDECL></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT><DECL><decl:dir id="ww"></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT><DECL><decl:dir id="p"><PTRDECL>
+</PTRDECL></decl:dir>
+</DECL></DECLSTAT>
+<DECLSTAT><DECL><decl:dir id="v"><FUNCDECL><ARGDECL>
+<decl:dir id="hello"></decl:dir></ARGDECL>
+<ARGDECL>
+<decl:dir id="pippo"></decl:dir></ARGDECL>
+</FUNCDECL></decl:dir>
+</DECL></DECLSTAT>
+<BODY><DECL><decl:dir id="q"><FUNCDECL><ARGDECL>
+<decl:dir id="j"></decl:dir></ARGDECL>
+</FUNCDECL></decl:dir>
+</DECL><istr:block>
+<DECLSTAT><DECL><decl:dir id="c"></decl:dir>
+</DECL></DECLSTAT>
+<istr:expr><assign>
+<ident id="glo"/><ident id="j"/></assign></istr:expr>
+<istr:if>
+<istr:block>
+<istr:expr><assign>
+<ident id="j" /> <const type = "i" value="2"/></assign></istr:expr>
+<istr:return><ident id="j"/></istr:return>
+</istr:block>
+</istr:if>
+
+</istr:block>
+</BODY>
+</cppsource>

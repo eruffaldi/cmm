@@ -1,0 +1,64 @@
+Testing errors:
+
+* not all control paths return a value
+
+int q(int j)
+{
+    if(glo > j) {
+		j = 2;
+		return j;
+    }
+}
+
+Viene controllato se e' presente un return, e se il flusso
+del codice corrente ti porta al punto giusto.
+
+
+
+* function does not return a value
+		
+int q(int j)
+{
+    if(glo > j) {
+		j = 2;		
+    }
+	return q;
+}
+
+In questo caso e' presente il return, ma non e' valido poiche'
+invece di un intero ritorno un puntatore a funzione.
+
+
+* controllo per valore destro negli assegnamenti
+
+int func(int k)
+{
+int * p;
+	(p+2) = k;
+	2 = 10;
+	return j;
+    
+}
+
+** Operazioni con i puntatori
+
+* l'addizione esiste in varie forme:
+	p	+	i
+	i	+	p
+	p	-   i
+	p	-	p
+  con la possibile ottimizzazione se i e' una costante
+  (moltiplicata per la dimensione del tipo del dato puntato)
+  int func(int k)
+  {
+  int * p1, * p2;
+  int j;
+	p1 = p2 + 1;
+	p2 = 2 + p1;
+	p1 = p2 - 1;
+	p1 = p2 + j;
+	j = p2 - p1;
+	// i = p1 + p2;		// Addition of pointers 
+   void * pv, *pv2;
+   pv = pv + 2;
+  }

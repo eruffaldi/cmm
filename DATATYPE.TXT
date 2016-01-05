@@ -1,0 +1,61 @@
+Strutture Dati Utilizzate:
+
+stackVector<T>		vettore di T, con dimensione settata dal costruttore
+	stack.h, stack.cpp
+HashishTable<Key, Value, Compare>	hash table
+	htable.h
+lista<T>			lista doppiamente linkata
+	lista.h
+constValue			contiene intero, char o float
+BinTree<T, Compare>
+mappaTree<K,T, Compare>
+	usa la BinTree
+mappaHash<K,T, Compare>
+	usa la HashishTable
+
+Una generica tabella dei simboli (una globale ed una per ogni funzione ed
+ ogni blocco di codice con variabili), e' una mappaTree. Che di per se'
+ occupa solo 4 bytes, supporta operazioni di
+	insert(make_pair(identificatore, Symbol*))
+
+Gli identificatori vengono inseriti in una tabella per risparmiare sulla
+memoria. usiamo una bintree(char*)
+
+Naturalmente la tabella dei simboli ritorna altre cose:
+	CSymbol
+		char *
+		PType
+		isVariable/isFunction
+		tabella 	// se fosse una struct contiene i membri
+
+	CFunction : CSymbol
+		isProto 	// simply a prototypr
+
+	CVariable:
+		locazione
+		globale/static/local/staticlocal
+
+
+PARSER:
+	<-> Identifer Table
+	<-> Nodes Tree
+	<-> String Constant Table
+
+
+SEMANTIC:
+	<-> Symbol Tables
+	<-> CType Table
+	<-> Label Map (vettore dinamico) + Set(interi)
+
+PASSI DEL PROGRAMMA
+	1) binary tree
+	2) nodes (only parsing ones)
+	2bis) identifers table e string table
+	3) parser
+
+	4) symbol table
+	5) nodes (the rest)
+	5bis) label
+	6) analisi semantica
+
+	7) generatore del codice

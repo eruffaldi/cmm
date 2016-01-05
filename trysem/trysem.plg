@@ -1,0 +1,36 @@
+--------------------Configuration: trysem - Win32 Debug--------------------
+Begining build with project "C:\prj\cmm\trysem\trysem.dsp", at root.
+Active configuration is Win32 (x86) Console Application (based on Win32 (x86) Console Application)
+
+Project's tools are:
+			"32-bit C/C++ Compiler for 80x86" with flags "/nologo /MLd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/trysem.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c "
+			"Win32 Resource Compiler" with flags "/l 0x410 /d "_DEBUG" "
+			"Browser Database Maker" with flags "/nologo /o"Debug/trysem.bsc" "
+			"COFF Linker for 80x86" with flags "kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/trysem.pdb" /debug /machine:I386 /out:"Debug/trysem.exe" /pdbtype:sept "
+			"Custom Build" with flags ""
+			"<Component 0xa>" with flags ""
+
+Creating temp file "C:\WINDOWS\TEMP\RSP1202.TMP" with contents </nologo /MLd /W3 /Gm /GX /Zi /Od /D "WIN32" /D "_DEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Debug/trysem.pch" /YX /Fo"Debug/" /Fd"Debug/" /FD /c 
+"C:\prj\cmm\trysem.cpp"
+>
+Creating command line "cl.exe @C:\WINDOWS\TEMP\RSP1202.TMP" 
+Creating temp file "C:\WINDOWS\TEMP\RSP1203.TMP" with contents <kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:yes /pdb:"Debug/trysem.pdb" /debug /machine:I386 /out:"Debug/trysem.exe" /pdbtype:sept 
+.\Debug\axpgen.obj
+.\Debug\gencode.obj
+.\Debug\node.obj
+.\Debug\nparser.obj
+.\Debug\parse_expr.obj
+.\Debug\parsedecl.obj
+.\Debug\Scan.obj
+.\Debug\semantic.obj
+.\Debug\symbol.obj
+.\Debug\trysem.obj
+.\Debug\types.obj>
+Creating command line "link.exe @C:\WINDOWS\TEMP\RSP1203.TMP" 
+Compiling...
+trysem.cpp
+Linking...
+
+
+
+trysem.exe - 0 error(s), 0 warning(s)

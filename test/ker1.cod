@@ -1,0 +1,142 @@
+	TITLE	ker1.cxx
+	.386P
+include listing.inc
+if @Version gt 510
+.model FLAT
+else
+_TEXT	SEGMENT PARA USE32 PUBLIC 'CODE'
+_TEXT	ENDS
+_DATA	SEGMENT DWORD USE32 PUBLIC 'DATA'
+_DATA	ENDS
+CONST	SEGMENT DWORD USE32 PUBLIC 'CONST'
+CONST	ENDS
+_BSS	SEGMENT DWORD USE32 PUBLIC 'BSS'
+_BSS	ENDS
+_TLS	SEGMENT DWORD USE32 PUBLIC 'TLS'
+_TLS	ENDS
+FLAT	GROUP _DATA, CONST, _BSS
+	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT
+endif
+PUBLIC	_main
+EXTRN	__iob:BYTE
+EXTRN	__filbuf:NEAR
+EXTRN	_printf:NEAR
+_DATA	SEGMENT
+$SG482	DB	'%d %d %d', 0aH, 00H
+_DATA	ENDS
+_TEXT	SEGMENT
+_c$ = -12
+_nl$ = -28
+_nw$ = -16
+_nc$ = -8
+_state$ = -24
+_IN$ = -20
+_OUT$ = -4
+_main	PROC NEAR
+; File ker1.cxx
+; Line 5
+  00000	55		 push	 ebp
+  00001	8b ec		 mov	 ebp, esp
+  00003	83 ec 20	 sub	 esp, 32			; 00000020H
+; Line 8
+  00006	c7 45 ec 01 00
+	00 00		 mov	 DWORD PTR _IN$[ebp], 1
+; Line 9
+  0000d	c7 45 fc 00 00
+	00 00		 mov	 DWORD PTR _OUT$[ebp], 0
+; Line 10
+  00014	8b 45 fc	 mov	 eax, DWORD PTR _OUT$[ebp]
+  00017	89 45 e8	 mov	 DWORD PTR _state$[ebp], eax
+; Line 11
+  0001a	c7 45 f8 00 00
+	00 00		 mov	 DWORD PTR _nc$[ebp], 0
+  00021	8b 4d f8	 mov	 ecx, DWORD PTR _nc$[ebp]
+  00024	89 4d f0	 mov	 DWORD PTR _nw$[ebp], ecx
+  00027	8b 55 f0	 mov	 edx, DWORD PTR _nw$[ebp]
+  0002a	89 55 e4	 mov	 DWORD PTR _nl$[ebp], edx
+$L475:
+; Line 12
+  0002d	a1 04 00 00 00	 mov	 eax, DWORD PTR __iob+4
+  00032	83 e8 01	 sub	 eax, 1
+  00035	a3 04 00 00 00	 mov	 DWORD PTR __iob+4, eax
+  0003a	83 3d 04 00 00
+	00 00		 cmp	 DWORD PTR __iob+4, 0
+  00041	7c 21		 jl	 SHORT $L485
+  00043	8b 0d 00 00 00
+	00		 mov	 ecx, DWORD PTR __iob
+  00049	0f be 11	 movsx	 edx, BYTE PTR [ecx]
+  0004c	81 e2 ff 00 00
+	00		 and	 edx, 255		; 000000ffH
+  00052	89 55 e0	 mov	 DWORD PTR -32+[ebp], edx
+  00055	a1 00 00 00 00	 mov	 eax, DWORD PTR __iob
+  0005a	83 c0 01	 add	 eax, 1
+  0005d	a3 00 00 00 00	 mov	 DWORD PTR __iob, eax
+  00062	eb 10		 jmp	 SHORT $L486
+$L485:
+  00064	68 00 00 00 00	 push	 OFFSET FLAT:__iob
+  00069	e8 00 00 00 00	 call	 __filbuf
+  0006e	83 c4 04	 add	 esp, 4
+  00071	89 45 e0	 mov	 DWORD PTR -32+[ebp], eax
+$L486:
+  00074	8b 4d e0	 mov	 ecx, DWORD PTR -32+[ebp]
+  00077	89 4d f4	 mov	 DWORD PTR _c$[ebp], ecx
+  0007a	83 7d f4 ff	 cmp	 DWORD PTR _c$[ebp], -1
+  0007e	74 4e		 je	 SHORT $L476
+; Line 13
+  00080	8b 55 f8	 mov	 edx, DWORD PTR _nc$[ebp]
+  00083	83 c2 01	 add	 edx, 1
+  00086	89 55 f8	 mov	 DWORD PTR _nc$[ebp], edx
+; Line 14
+  00089	83 7d f4 0a	 cmp	 DWORD PTR _c$[ebp], 10	; 0000000aH
+  0008d	75 09		 jne	 SHORT $L477
+; Line 15
+  0008f	8b 45 e4	 mov	 eax, DWORD PTR _nl$[ebp]
+  00092	83 c0 01	 add	 eax, 1
+  00095	89 45 e4	 mov	 DWORD PTR _nl$[ebp], eax
+$L477:
+; Line 16
+  00098	83 7d f4 20	 cmp	 DWORD PTR _c$[ebp], 32	; 00000020H
+  0009c	74 0c		 je	 SHORT $L479
+  0009e	83 7d f4 0a	 cmp	 DWORD PTR _c$[ebp], 10	; 0000000aH
+  000a2	74 06		 je	 SHORT $L479
+  000a4	83 7d f4 09	 cmp	 DWORD PTR _c$[ebp], 9
+  000a8	75 08		 jne	 SHORT $L478
+$L479:
+; Line 17
+  000aa	8b 4d fc	 mov	 ecx, DWORD PTR _OUT$[ebp]
+  000ad	89 4d e8	 mov	 DWORD PTR _state$[ebp], ecx
+; Line 18
+  000b0	eb 17		 jmp	 SHORT $L480
+$L478:
+  000b2	8b 55 e8	 mov	 edx, DWORD PTR _state$[ebp]
+  000b5	3b 55 fc	 cmp	 edx, DWORD PTR _OUT$[ebp]
+  000b8	75 0f		 jne	 SHORT $L481
+; Line 20
+  000ba	8b 45 ec	 mov	 eax, DWORD PTR _IN$[ebp]
+  000bd	89 45 e8	 mov	 DWORD PTR _state$[ebp], eax
+; Line 21
+  000c0	8b 4d f0	 mov	 ecx, DWORD PTR _nw$[ebp]
+  000c3	83 c1 01	 add	 ecx, 1
+  000c6	89 4d f0	 mov	 DWORD PTR _nw$[ebp], ecx
+$L481:
+$L480:
+; Line 23
+  000c9	e9 5f ff ff ff	 jmp	 $L475
+$L476:
+; Line 24
+  000ce	8b 55 f8	 mov	 edx, DWORD PTR _nc$[ebp]
+  000d1	52		 push	 edx
+  000d2	8b 45 f0	 mov	 eax, DWORD PTR _nw$[ebp]
+  000d5	50		 push	 eax
+  000d6	8b 4d e4	 mov	 ecx, DWORD PTR _nl$[ebp]
+  000d9	51		 push	 ecx
+  000da	68 00 00 00 00	 push	 OFFSET FLAT:$SG482
+  000df	e8 00 00 00 00	 call	 _printf
+  000e4	83 c4 10	 add	 esp, 16			; 00000010H
+; Line 25
+  000e7	8b e5		 mov	 esp, ebp
+  000e9	5d		 pop	 ebp
+  000ea	c3		 ret	 0
+_main	ENDP
+_TEXT	ENDS
+END

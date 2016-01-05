@@ -1,0 +1,124 @@
+	TITLE	ker2.cxx
+	.386P
+include listing.inc
+if @Version gt 510
+.model FLAT
+else
+_TEXT	SEGMENT PARA USE32 PUBLIC 'CODE'
+_TEXT	ENDS
+_DATA	SEGMENT DWORD USE32 PUBLIC 'DATA'
+_DATA	ENDS
+CONST	SEGMENT DWORD USE32 PUBLIC 'CONST'
+CONST	ENDS
+_BSS	SEGMENT DWORD USE32 PUBLIC 'BSS'
+_BSS	ENDS
+_TLS	SEGMENT DWORD USE32 PUBLIC 'TLS'
+_TLS	ENDS
+FLAT	GROUP _DATA, CONST, _BSS
+	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT
+endif
+PUBLIC	_main
+EXTRN	?printf@@YAXPADZZ:NEAR				; printf
+EXTRN	?getchar@@YAHXZ:NEAR				; getchar
+_DATA	SEGMENT
+$SG185	DB	'%d %d %d', 0aH, 00H
+_DATA	ENDS
+_TEXT	SEGMENT
+_c$ = -12
+_nl$ = -32
+_nw$ = -16
+_nc$ = -8
+_state$ = -24
+_IN$ = -20
+_OUT$ = -4
+_EOF$ = -28
+_main	PROC NEAR
+; File ker2.cxx
+; Line 7
+  00000	55		 push	 ebp
+  00001	8b ec		 mov	 ebp, esp
+  00003	83 ec 20	 sub	 esp, 32			; 00000020H
+; Line 10
+  00006	c7 45 ec 01 00
+	00 00		 mov	 DWORD PTR _IN$[ebp], 1
+; Line 11
+  0000d	c7 45 e4 ff ff
+	ff ff		 mov	 DWORD PTR _EOF$[ebp], -1
+; Line 12
+  00014	c7 45 fc 00 00
+	00 00		 mov	 DWORD PTR _OUT$[ebp], 0
+; Line 13
+  0001b	8b 45 fc	 mov	 eax, DWORD PTR _OUT$[ebp]
+  0001e	89 45 e8	 mov	 DWORD PTR _state$[ebp], eax
+; Line 14
+  00021	c7 45 f8 00 00
+	00 00		 mov	 DWORD PTR _nc$[ebp], 0
+  00028	8b 4d f8	 mov	 ecx, DWORD PTR _nc$[ebp]
+  0002b	89 4d f0	 mov	 DWORD PTR _nw$[ebp], ecx
+  0002e	8b 55 f0	 mov	 edx, DWORD PTR _nw$[ebp]
+  00031	89 55 e0	 mov	 DWORD PTR _nl$[ebp], edx
+$L178:
+; Line 15
+  00034	e8 00 00 00 00	 call	 ?getchar@@YAHXZ		; getchar
+  00039	89 45 f4	 mov	 DWORD PTR _c$[ebp], eax
+  0003c	8b 45 f4	 mov	 eax, DWORD PTR _c$[ebp]
+  0003f	3b 45 e4	 cmp	 eax, DWORD PTR _EOF$[ebp]
+  00042	74 4b		 je	 SHORT $L179
+; Line 16
+  00044	8b 4d f8	 mov	 ecx, DWORD PTR _nc$[ebp]
+  00047	83 c1 01	 add	 ecx, 1
+  0004a	89 4d f8	 mov	 DWORD PTR _nc$[ebp], ecx
+; Line 17
+  0004d	83 7d f4 0a	 cmp	 DWORD PTR _c$[ebp], 10	; 0000000aH
+  00051	75 09		 jne	 SHORT $L180
+; Line 18
+  00053	8b 55 e0	 mov	 edx, DWORD PTR _nl$[ebp]
+  00056	83 c2 01	 add	 edx, 1
+  00059	89 55 e0	 mov	 DWORD PTR _nl$[ebp], edx
+$L180:
+; Line 19
+  0005c	83 7d f4 20	 cmp	 DWORD PTR _c$[ebp], 32	; 00000020H
+  00060	74 0c		 je	 SHORT $L182
+  00062	83 7d f4 0a	 cmp	 DWORD PTR _c$[ebp], 10	; 0000000aH
+  00066	74 06		 je	 SHORT $L182
+  00068	83 7d f4 09	 cmp	 DWORD PTR _c$[ebp], 9
+  0006c	75 08		 jne	 SHORT $L181
+$L182:
+; Line 20
+  0006e	8b 45 fc	 mov	 eax, DWORD PTR _OUT$[ebp]
+  00071	89 45 e8	 mov	 DWORD PTR _state$[ebp], eax
+; Line 21
+  00074	eb 17		 jmp	 SHORT $L183
+$L181:
+  00076	8b 4d e8	 mov	 ecx, DWORD PTR _state$[ebp]
+  00079	3b 4d fc	 cmp	 ecx, DWORD PTR _OUT$[ebp]
+  0007c	75 0f		 jne	 SHORT $L184
+; Line 23
+  0007e	8b 55 ec	 mov	 edx, DWORD PTR _IN$[ebp]
+  00081	89 55 e8	 mov	 DWORD PTR _state$[ebp], edx
+; Line 24
+  00084	8b 45 f0	 mov	 eax, DWORD PTR _nw$[ebp]
+  00087	83 c0 01	 add	 eax, 1
+  0008a	89 45 f0	 mov	 DWORD PTR _nw$[ebp], eax
+$L184:
+$L183:
+; Line 26
+  0008d	eb a5		 jmp	 SHORT $L178
+$L179:
+; Line 27
+  0008f	8b 4d f8	 mov	 ecx, DWORD PTR _nc$[ebp]
+  00092	51		 push	 ecx
+  00093	8b 55 f0	 mov	 edx, DWORD PTR _nw$[ebp]
+  00096	52		 push	 edx
+  00097	8b 45 e0	 mov	 eax, DWORD PTR _nl$[ebp]
+  0009a	50		 push	 eax
+  0009b	68 00 00 00 00	 push	 OFFSET FLAT:$SG185
+  000a0	e8 00 00 00 00	 call	 ?printf@@YAXPADZZ	; printf
+  000a5	83 c4 10	 add	 esp, 16			; 00000010H
+; Line 28
+  000a8	8b e5		 mov	 esp, ebp
+  000aa	5d		 pop	 ebp
+  000ab	c3		 ret	 0
+_main	ENDP
+_TEXT	ENDS
+END

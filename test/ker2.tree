@@ -1,0 +1,111 @@
+Nblock
+|- Ndeclstat
+|\- Ndecl  v 
+| \- Ndirdecl printf
+|  \- Nfuncdecl  (*c?)v 
+|   |- Nargdecl  *c 
+|   |\- Ndirdecl 
+|   | \- Nptrdecl  *c 
+|   \- Nellipse  ? 
+|- Ndeclstat
+|\- Ndecl  i 
+| \- Ndirdecl getchar
+|  \- Nfuncdecl  ()i 
+\- Nfuncbody
+ |- Ndecl  v 
+ |\- Ndirdecl main
+ | \- Nfuncdecl  ()v 
+ \- Nblock
+  |- Ndeclstat
+  |\- Ndecl  i 
+  | |- Ndirdecl c
+  | |- Ndirdecl nl
+  | |- Ndirdecl nw
+  | |- Ndirdecl nc
+  | \- Ndirdecl state
+  |- Ndeclstat
+  |\- Ndecl  i 
+  | |- Ndirdecl IN
+  | |- Ndirdecl OUT
+  | \- Ndirdecl EOF
+  |- Nexpr
+  |\- Nassign  i 
+  | |- "IN" iL 
+  | \- Nconst int = 1
+  |- Nexpr
+  |\- Nassign  i 
+  | |- "EOF" iL 
+  | \- Nconst int = -1
+  |- Nexpr
+  |\- Nassign  i 
+  | |- "OUT" iL 
+  | \- Nconst int = 0
+  |- Nexpr
+  |\- Nassign  i 
+  | |- "state" iL 
+  | \- "OUT" iL 
+  |- Nexpr
+  |\- Nassign  i 
+  | |- "nl" iL 
+  | \- Nassign  i 
+  |  |- "nw" iL 
+  |  \- Nassign  i 
+  |   |- "nc" iL 
+  |   \- Nconst int = 0
+  |- Nwhile
+  ||- Ncmp<cNE, (0 ),(1 ),(2 )>
+  |||- Nassign  i 
+  ||||- "c" iL 
+  |||\- Ncall  i 
+  ||| \- "getchar" ()iL 
+  ||\- "EOF" iL 
+  |\- Nblock
+  | |- Nexpr
+  | |\- Ndec  i 
+  | | \- "nc" iL 
+  | |- Nif
+  | ||- Ncmp<cEQ, *,(3 ),*>
+  | |||- "c" iL 
+  | ||\- Nconst int = 10
+  | |\- Nexpr
+  | | \- Ndec  i 
+  | |  \- "nl" iL 
+  | \- Nif
+  |  |- Norelse2<cEQ, (4 5 ),(6 ),(8 )>
+  |  ||- Norelse1<cEQ, (4 5 ),*,*>
+  |  ||\- Norelse2<cEQ, (4 ),*,*>
+  |  || |- Norelse1<cEQ, (4 ),*,*>
+  |  || |\- Ncmp<cEQ, *,*,*>
+  |  || | |- "c" iL 
+  |  || | \- Nconst int = 32
+  |  || \- Ncmp<cEQ, *,*,*>
+  |  ||  |- "c" iL 
+  |  ||  \- Nconst int = 10
+  |  |\- Ncmp<cEQ, *,*,*>
+  |  | |- "c" iL 
+  |  | \- Nconst int = 9
+  |  |- Nexpr
+  |  |\- Nassign  i 
+  |  | |- "state" iL 
+  |  | \- "OUT" iL 
+  |  \- Nif
+  |   |- Ncmp<cEQ, *,(7 ),*>
+  |   ||- "state" iL 
+  |   |\- "OUT" iL 
+  |   \- Nblock
+  |    |- Nexpr
+  |    |\- Nassign  i 
+  |    | |- "state" iL 
+  |    | \- "IN" iL 
+  |    \- Nexpr
+  |     \- Ndec  i 
+  |      \- "nw" iL 
+  \- Nexpr
+   \- Ncall  v 
+    |- "printf" (*c?)vL 
+    \- Ncomma 
+     |- Nconst string
+     |- "nl" iL 
+     |- "nw" iL 
+     \- "nc" iL 
+Code Generation...

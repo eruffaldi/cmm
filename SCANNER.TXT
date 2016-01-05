@@ -1,0 +1,34 @@
+L'analizzatore lessicale e' la prima componente del compilatore, riceve
+in ingresso un file e produce una sequenza di token. Sara' poi il parser ad
+utilizzare le informazioni fornite dallo scanner.
+
+Tipologie di token:
+IDENT	identificatore, usare getSymbol() per ottenere la stringa
+		dell'identificatore.
+KEYWORD parola chiave, ricavata da una opportuna tabella. Per ottenere
+		l'indice della parola chiave usare keyw().
+ICONST	costante intera, ottenibile attraverso, getIConst
+FCONST	costante floating, getFConst
+CCONST	costante char, getCConst
+STRCONST costante stringa, ottenuta tramite getStringLength e getString
+FINEFILE termine del file di input
+
+Notiamo che di questi token alcuni verranno usati solo in luoghi precisi,
+in particolare ICONST, FCONST, CCONST e STRCONST solo nella valutazione di
+element. IDENT nella element ed anche nella decl.
+
+Gli altri valori ottenibili tramite tokentype() sono quelli degli operatori,
+e dei separatori.
+
+Classe dello Scanner:
+CScan(filename, keyword, nkeyword)
+int lineno()
+const Token& next()
+const Token& current()
+void back()
+bool require(TokenType)
+operator bool()
+int whichKeyword(const char *)
+
+La classe CScan deve essere derivata per gestire le condizioni di errore e per
+aggiungere funzioni membro come la skip

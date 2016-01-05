@@ -1,0 +1,12 @@
+
+int a [ 10 ] , hello , * pippo ; 
+float ww ; 
+int * p ; 
+int glo ; 
+int v ( int hello , char pippo ) ; 
+int q ( int j ) 
+{ 
+char c ; 
+glo = j ; 
+return j ; 
+} 

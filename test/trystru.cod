@@ -1,0 +1,46 @@
+	TITLE	trystru.cpp
+	.386P
+include listing.inc
+if @Version gt 510
+.model FLAT
+else
+_TEXT	SEGMENT PARA USE32 PUBLIC 'CODE'
+_TEXT	ENDS
+_DATA	SEGMENT DWORD USE32 PUBLIC 'DATA'
+_DATA	ENDS
+CONST	SEGMENT DWORD USE32 PUBLIC 'CONST'
+CONST	ENDS
+_BSS	SEGMENT DWORD USE32 PUBLIC 'BSS'
+_BSS	ENDS
+_TLS	SEGMENT DWORD USE32 PUBLIC 'TLS'
+_TLS	ENDS
+FLAT	GROUP _DATA, CONST, _BSS
+	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT
+endif
+PUBLIC	?f@@YA?AUW@@U1@@Z				; f
+_TEXT	SEGMENT
+_p$ = 12
+$T176 = 8
+?f@@YA?AUW@@U1@@Z PROC NEAR				; f
+; File trystru.cpp
+; Line 7
+  00000	55		 push	 ebp
+  00001	8b ec		 mov	 ebp, esp
+  00003	56		 push	 esi
+  00004	57		 push	 edi
+; Line 8
+  00005	c6 45 29 64	 mov	 BYTE PTR _p$[ebp+29], 100 ; 00000064H
+; Line 9
+  00009	b9 19 00 00 00	 mov	 ecx, 25			; 00000019H
+  0000e	8d 75 0c	 lea	 esi, DWORD PTR _p$[ebp]
+  00011	8b 7d 08	 mov	 edi, DWORD PTR $T176[ebp]
+  00014	f3 a5		 rep movsd
+  00016	8b 45 08	 mov	 eax, DWORD PTR $T176[ebp]
+; Line 10
+  00019	5f		 pop	 edi
+  0001a	5e		 pop	 esi
+  0001b	5d		 pop	 ebp
+  0001c	c3		 ret	 0
+?f@@YA?AUW@@U1@@Z ENDP					; f
+_TEXT	ENDS
+END

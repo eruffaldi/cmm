@@ -1,0 +1,32 @@
+Per aggiungere le strutture occorre:
+
+1) albero di traduzione:
+			Ndot	(type of itemsymbol)
+	structure	 itemsymbol
+	
+					Narrow	
+	ptr to a structure	itemsymbol
+
+2) generazione del codice:
+	* oltre al normale accesso alle strutture dati
+	e' importante sottolineare il caso del ritorno di una
+	struttura dati:
+		set EDI
+		set ESI
+		set ECX
+		rep movsb
+	dopo aver salvato EDI ed ESI all'inizio
+	questo vale anche nella copia di strutture: caso dell'assegnamento
+
+	* Ndot viene tradotto aggiungendo al valore sullo stack
+	(un lvalue) l'offset del campo e se e' un rvalue va
+	estratto il valore
+	* Narrow
+
+// in main
+
+// BETA: structure support. Experimental
+	CStruct * defstr = new CStruct("atype");
+	defstr->addChild("me", CType::Int(), 1);
+
+	proot->getSymTab.put("atype", defstr);
