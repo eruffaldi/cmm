@@ -38,7 +38,7 @@ enum NodeType {
 	Nlast
 };
 
-#include <iostream.h>
+#include <iostream>
 #include "types.h"
 
 class CFunction;
@@ -138,7 +138,7 @@ public:
 	// Debugging 
 	VISITABLE_BY(CNode, NodeVisitor);
 	
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 
 	static char * stringOf(NodeType op);
 };
@@ -173,7 +173,7 @@ public:
 	void lvalue(bool b) {flag = (flag & ~1) | (b ? 1: 0);}
 	VISITABLE_BY(CExpression, NodeVisitor);
 	
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 };
 typedef dyn_ptr<CExpression> PExpression;
 
@@ -241,7 +241,7 @@ public:
 		: CUnExpr(nt,p) {}
 
 	void appendChild(PExpression p) {children.push_back(p);}
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 	VISITABLE_BY(CComma, NodeVisitor);
 };
 typedef dyn_ptr<CComma> PComma;
@@ -267,7 +267,7 @@ public:
 		assert(p == 0 || *p == Nptrdecl || *p == Narraydecl || *p == Nfuncdecl);
 		CBinExpr::setLeft(p);
 	}	
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 	VISITABLE_BY(CDirDecl, NodeVisitor);
 };
 
@@ -295,7 +295,7 @@ public:
 		} strval;
 	};
 	 
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 	VISITABLE_BY(CConstExpr, NodeVisitor);
 };
 typedef dyn_ptr<CConstExpr> PConstExpr;
@@ -306,7 +306,7 @@ public:
 	CIdentifer(char * cp) : CExpression(Nident), ident(cp) {}
 	char * & identifer() {return ident;}
 	 
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 	VISITABLE_BY(CIdentifer, NodeVisitor);
 };
 typedef dyn_ptr<CIdentifer> PIdentifer;
@@ -322,7 +322,7 @@ public:
 	CStatement(NodeType, lineRef);
 
 	virtual bool isStat() const {return true;}
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 	int lineNumber() const {return lineno._lineno;}
 	int fileNumber() const {return lineno._fileno;}
 	VISITABLE_BY(CStatement, NodeVisitor);
@@ -366,7 +366,7 @@ public:
 	// blocco padre.
 	CBlock(lineRef, CBlock*);
 
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 
 	// Attributi
 	CBlock *	parent() const {return m_parent;}	
@@ -454,7 +454,7 @@ public:
 	virtual PNode left() const {return cond;}
 	virtual PNode right() const {return block;}
 	VISITABLE_BY(CCondStat, NodeVisitor);
-	virtual void writeXml(ostream & o, writeXmlData&);
+	virtual void writeXml(std::ostream & o, writeXmlData&);
 };
 typedef dyn_ptr<CCondStat> PCondStat;
 
@@ -472,7 +472,7 @@ public:
 	CSymbol * operator->() { return m_symbol; }
 	CSymbol & operator* () { return *m_symbol;}
 	CSymbol * getSymbol() const {return m_symbol;}
-	virtual void writeXml(ostream & o, writeXmlData&){}
+	virtual void writeXml(std::ostream & o, writeXmlData&){}
 	VISITABLE_BY(CSymExpr, NodeVisitor);
 protected:
 	CSymbol * m_symbol;
@@ -510,7 +510,7 @@ class PrintVisitor : public NodeVisitor
 		return wd;
 	}
 
-	ostream & spacer(ostream & o, writeData level)
+	std::ostream & spacer(std::ostream & o, writeData level)
 	{
 	// 	for(int i= 0;i< n; i++) o << ' ';
 		int k = level.mask & ~MASK;
@@ -527,11 +527,11 @@ class PrintVisitor : public NodeVisitor
 	}
 
 	void doExprChild(CNode* pn);
-	ostream & o;
+	std::ostream & o;
 	
 	void stampaLogic(LogicDesc & ld);
 public:
-	PrintVisitor(ostream & _o, CNode* pn) : NodeVisitor(), o(_o) {
+	PrintVisitor(std::ostream & _o, CNode* pn) : NodeVisitor(), o(_o) {
 		level.level = level.mask = 0;
 		pn->accept(*this);
 	}

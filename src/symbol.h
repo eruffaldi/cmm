@@ -70,7 +70,7 @@ protected:
 class CStruct: public CSymbol
 {
 public:
-	CStruct::CStruct(const char* name, int lineno, CSymbol * padre);
+	CStruct(const char* name, int lineno, CSymbol * padre);
 	~CStruct();
 
 	// aggiunge un elemento alla struttura 

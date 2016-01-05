@@ -4,7 +4,7 @@
 // Descrizione: dichiarazione del preprocessore C++
 
 
-#include <fstream.h>
+#include <fstream>
 
 // La funzione virtuale di estrazione di un carattere
 // ritorna due caratteri particolari 
@@ -21,7 +21,7 @@ class CPreproc {
     char * m_filename;		// filename corrente
     int    m_lineno;		// linea corrente
     int    m_fileno;		// file corrente
-	ifstream m_stream;		// streaming di input
+	std::ifstream m_stream;		// streaming di input
 	
 	
 public:

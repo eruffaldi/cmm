@@ -113,7 +113,7 @@ public:
 	binTree(const binTree&);
 	int size() const {return m_count;}
 	iterator find(const T&) const;
-	pair<iterator,bool> insert(const T&);
+	std::pair<iterator,bool> insert(const T&);
 	void clear();
 	void erase(iterator);
 	void erase(iterator, iterator);
@@ -143,7 +143,7 @@ binTree<T,Cmp>::binTree(const binTree&r)
 }
 
 template <class T, class Cmp >
-binTree<T,Cmp>::iterator binTree<T,Cmp>::find(const T&v) const
+typename binTree<T,Cmp>::iterator binTree<T,Cmp>::find(const T&v) const
 {
 	iterator cur = root();
 	Cmp compare;
@@ -159,7 +159,7 @@ binTree<T,Cmp>::iterator binTree<T,Cmp>::find(const T&v) const
 }
 
 template <class T, class Cmp >
-binTree<T,Cmp>::pnode binTree<T,Cmp>::_find(const T&v, int & k, pnode & parent)
+typename binTree<T,Cmp>::pnode binTree<T,Cmp>::_find(const T&v, int & k, pnode & parent)
 {
 	pnode tparent = m_root;
 	pnode cur = m_root;
@@ -254,7 +254,7 @@ void binTree<T,Cmp>::clear()
 }
 
 template <class T, class Cmp >
-pair< binTree<T,Cmp>::iterator,bool> binTree<T,Cmp>::insert(const T& v)
+std::pair< typename binTree<T,Cmp>::iterator,bool> binTree<T,Cmp>::insert(const T& v)
 {
 	int k; 
 	pnode cur, parent;

@@ -63,7 +63,7 @@ class CParser : public CScanOnly {
 	PExpression mkleaf_c(float);
 	PExpression mkleaf_c(int);
 	PExpression mkleaf_c(const char*, int);
-	 PExpression CParser::mkleaf_ident(const char *s);
+	 PExpression mkleaf_ident(const char *s);
 public:
 	CParser(const char *filename);	
 	PExpression parseDeclaration();

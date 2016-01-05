@@ -8,13 +8,13 @@
 #ifdef _MSC_VER
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <strstream>
 #endif
 #include "errorTable.h"
 
 // questa classe si comporta come un ostrstream ma supporta l'autodistruzione
 // della stringa memorizzata
-class errorString: public ostrstream
+class errorString: public std::ostrstream
 {	
 public:
 	typedef char * tcp;

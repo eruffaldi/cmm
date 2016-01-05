@@ -3,8 +3,9 @@
 // Autore: Ruffaldi Emanuele
 // Progetto: CPP/Base
 #include "cmm.h"
+#include <iostream>
 
-char * lookup[] = 
+const char * lookup[] = 
 	{
 	// first fatal
 	"","",
@@ -58,6 +59,6 @@ const char * CMM::lookupError(ErrorCode ec)
 
 void CMM::error(const char * cp)
 {
-	cout << "line " << currentLine << " - " << cp << endl;	
+	std::cout << "line " << currentLine << " - " << cp << std::endl;	
 	errorCount++;
 }

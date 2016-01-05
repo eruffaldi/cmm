@@ -187,7 +187,7 @@ void HashishTable<Key, T,compare>::remove(const Key&k)
     compare cmp;
     while(p) {
         if(cmp(k,p->key)) {
-            if(last == 0) 
+            if(prev == 0) 
                 mTable[h] = p->next;
             else
                 prev->next = p->next;

@@ -83,8 +83,8 @@ public:
     friend int hashValue(const PType &p);
         static void init();
                                  
-    friend ostream & operator << (ostream & o, const CType & r);
-	ostream & fullNameType(ostream & o) const;
+    friend std::ostream & operator << (std::ostream & o, const CType & r);
+	std::ostream & fullNameType(std::ostream & o) const;
 private:
 
 	BaseType  base;		// tipo di base

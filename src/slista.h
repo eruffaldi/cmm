@@ -292,7 +292,7 @@ void slista<T>::merge(slista& li) {
 */
 
 template <class T>
-slista<T>::node * slista<T>::mergelist(node * p1, node * p2)
+typename slista<T>::node * slista<T>::mergelist(node * p1, node * p2)
 {
 	if(!p1) return p2;
 	if(!p2) return p1;
@@ -363,7 +363,7 @@ void slista<T>::erase(iterator first, iterator last) {
 
 template <class T>
 // inserisce un elemento prima di item e ritorna l'elemento aggiunto
-slista<T>::node* slista<T>::insertElement(node* item, const_reference v, node*prev)
+typename slista<T>::node* slista<T>::insertElement(node* item, const_reference v, node*prev)
 {
     node *newItem = new node(v, item);
     if(item == m_head)  {
@@ -438,7 +438,7 @@ void slista<T>::sort() {
 // Ritorna: un iteratore tra first e last escluso, se non trova
 // ritorna last
 template <class T>
-slista<T>::iterator slista<T>::binary_search(iterator first, iterator last, const_reference v)
+typename slista<T>::iterator slista<T>::binary_search(iterator first, iterator last, const_reference v)
 {
     int passo = (last-first)/2;     // distanza fra i due iteratori
     iterator pos = first + passo;
@@ -460,7 +460,7 @@ slista<T>::iterator slista<T>::binary_search(iterator first, iterator last, cons
 }
 
 template <class T>
-slista<T>::node* slista<T>::itemPrevious(iterator pos, node* from ) 
+typename slista<T>::node* slista<T>::itemPrevious(iterator pos, node* from ) 
 {
     if(from == 0)
         from = m_head;	

@@ -92,7 +92,7 @@ public:
 
 };
 
-inline ostream & operator << (ostream & o, const NatSet & r)
+inline std::ostream & operator << (std::ostream & o, const NatSet & r)
 {
 	o << '(';
 	unsigned int k;

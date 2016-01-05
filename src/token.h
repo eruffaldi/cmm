@@ -5,7 +5,7 @@
 #ifndef TOKEN_H
 #define TOKEN_H
 
-#include <iostream.h>
+#include <iostream>
 
 enum TokenType { 
 		tknNONE = 0, 
@@ -110,7 +110,7 @@ public:
 	void setFConst(float f);	
 	
 	// stampa testuale del token
-	friend ostream& operator<< (ostream& o, const Token&);
+	friend std::ostream& operator<< (std::ostream& o, const Token&);
 
 private:
 

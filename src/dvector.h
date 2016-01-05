@@ -98,7 +98,7 @@ public:
 			for(iterator p = inizio+1; p < end(); p++)
 				m_data[p] = m_data[p-1];
 			m_dim += r.size();     
-			for(p = 0; p < r.end(); p++)
+			for(iterator p = 0; p < r.end(); p++)
 				m_data[p+inizio] = r.m_data[p]; 
 			return inizio;          
 		}	

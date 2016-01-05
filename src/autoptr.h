@@ -45,7 +45,7 @@ public:
 
 	~auto_ptr() {if(owned) delete _p;}
 
-    T& operator*() const throw() {return *p;}
+    T& operator*() const throw() {return *_p;}
 	T *operator->() const throw() {return get();}
     T *get() const throw()   {return _p;}
 	T *release() const {owned = false; return _p;}

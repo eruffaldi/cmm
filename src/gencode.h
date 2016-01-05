@@ -6,11 +6,11 @@
 #define GENCODE_H
 
 #include "node.h"
-#include <fstream.h>
+#include <fstream>
 #ifdef _MSC_VER
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <strstream>
 #endif
 
 #include "bools.h"
@@ -41,8 +41,8 @@ private:
 	char outbuf[255];
 	char comment[255];
 	int bool2exprlabelcount;
-	ofstream out;
-	ostrstream obuf, ofunctionCode, ocomment;
+	std::ofstream out;
+	std::ostrstream obuf, ofunctionCode, ocomment;
 	PBlock m_top;
 	bool inCode;
 
@@ -118,7 +118,7 @@ private:
 	void emitJCond(Cond c, LabelSet lset, bool isFloat = false);	// vedere manuale	
 	TrueLabel extractFirstLabel(LabelSet lb);
 
-	char * registerString(Registro reg, int size = 4);
+	const char * registerString(Registro reg, int size = 4);
 	void emitPop(Registro reg); // + newline
 	void emitPush(Registro reg);	// push del registro...+ newline
 	// la emitPush di un simbolo genera:

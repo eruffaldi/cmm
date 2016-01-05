@@ -8,7 +8,7 @@
 #ifdef _MSC_VER
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <strstream>
 #endif
 
 #include "preproc.h"
@@ -77,7 +77,7 @@ protected:
 	bool		scanChar();
 	void		scanNumber(char c);
 	void		scanString();
-	char		digitSequence(ostream &o);
+	char		digitSequence(std::ostream &o);
 	char		getEscape(char c);
 	TokenType	whichKeyword(const char *);
 

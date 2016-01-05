@@ -1,7 +1,9 @@
 #ifndef BITSET_H
 #define BITSET_H
 
-typedef int bool;
+//typedef int bool;
+#define  WORD_BITCOUNT (sizeof(unsigned)*8)
+
 
 class BitSet {
 
@@ -36,7 +38,6 @@ class BitSet {
 		unsigned *pData;
 		unsigned aItem;		// only one mSize <= BITCOUNT, see at
 	};
-#define  WORD_BITCOUNT = sizeof(unsigned)*8;
 	void init(int size);
 	unsigned & at(int pos) const;
 	unsigned mask(int pos) const;

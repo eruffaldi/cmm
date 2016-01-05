@@ -28,10 +28,10 @@ static int align(int & k, int v = 3)
 }
 
 // Stringhe per l'inizio e la fine del file
-static char * prefix = 
+static const char * prefix = 
 	".set noreorder\n"".set volatile\n" ".set noat\n"
 	"#include<regdef.h>\n";
-static char * postfix = "";
+static const char * postfix = "";
 
 
 AXPGen::AXPGen(char * source, char *output, PBlock pb) :
@@ -57,7 +57,7 @@ AXPGen::AXPGen(char * source, char *output, PBlock pb) :
 	
 	// itera su tutte le funzioni 
 	processFunctions();
-	ofunctionCode << ends;
+	ofunctionCode << std::ends;
 	out << ofunctionCode.str();
 	postCode();
 }
@@ -94,9 +94,9 @@ void AXPGen::newline()
 		for(int i = 0; i < 40-n; i++)
 			obuf << ' ';
 	}
-	ocomment << ends;
-	obuf << ocomment.str() << ends;	
-	ofunctionCode << (inCode ? "\t\t" : "") << obuf.str() << endl;
+	ocomment << std::ends;
+	obuf << ocomment.str() << std::ends;	
+	ofunctionCode << (inCode ? "\t\t" : "") << obuf.str() << std::endl;
 	obuf.seekp(0);
 	ocomment.seekp(0);
 }
@@ -168,7 +168,7 @@ void AXPGen::definePublicVar()
 void AXPGen::processSymbols(PBlock pb, int where)
 {
     FOR_EACH(psym, pb->getSymTab(), CSymbolTable::iterator, CSymbol*)
-    	ostrstream ost;
+    	std::ostrstream ost;
 		if(psym->isFunction()) {
 			if(psym->isExtern()) {
 				if(psym->used)
@@ -176,7 +176,7 @@ void AXPGen::processSymbols(PBlock pb, int where)
 			}
 			else 
 				funDefinite.push_back((CFunction*)psym);						
-			ost << psym->getNome() << ends;
+			ost << psym->getNome() << std::ends;
 			psym->asmName = ost.str();
 		}
 		// variabili globali
@@ -185,7 +185,7 @@ void AXPGen::processSymbols(PBlock pb, int where)
 				globalVar.push_back(psym);
 			else if(psym->sType() == stoEXTERN)
 				symEsterni.push_back(psym);		
-			ost << psym->getNome() << ends;	
+			ost << psym->getNome() << std::ends;	
 			psym->asmName = ost.str();
 		}	
 		// simboli locali ad una funzione
@@ -193,11 +193,11 @@ void AXPGen::processSymbols(PBlock pb, int where)
 			if(psym->sType() == stoEXTERN) 
 				symEsterni.push_back(psym);			
 			// calcola mangled name come in processLocalBlock
-			ostrstream ost;
+			std::ostrstream ost;
 			ost << psym->getNome() << "$";
 			if(where == 2)
-				ost << dec << pb->id();
-			ost << ends;
+				ost << std::dec << pb->id();
+			ost << std::ends;
 			psym->asmName = ost.str();
 
 		}        
@@ -228,7 +228,7 @@ AXPGen::AsmType AXPGen::asmTypeOf(PType t)
 	case tFLOAT: return AFLOAT;
 	case tVOID: return AVOID;
 	default:
-		cout << "INTERNAL ERROR IN asmtypeof\n";
+		std::cout << "INTERNAL ERROR IN asmtypeof\n";
 		return AVOID;
 	}
 }
@@ -371,9 +371,9 @@ void AXPGen::prolog(CFunction *psym)
 	processLocalSymbols(psym);
 	
 	ofunctionCode << ".align 3\n";	
-	ofunctionCode << ".globl " << mangleSymbol(psym) << endl;
-	ofunctionCode << ".ent " << mangleSymbol(psym) << endl;
-	ofunctionCode << mangleSymbol(psym) << ":" << endl;
+	ofunctionCode << ".globl " << mangleSymbol(psym) << std::endl;
+	ofunctionCode << ".ent " << mangleSymbol(psym) << std::endl;
+	ofunctionCode << mangleSymbol(psym) << ":" << std::endl;
 
 	int argcount =  psym->getTipo()->getParamCount();
 	int kmax = argcount > 6 ? 6: argcount;	
@@ -413,7 +413,7 @@ void AXPGen::epilog(CFunction *psym)
 	emitIstr("addq", rSP, imm(frame.size), rSP); newline();
 	obuf << "ret $31, (ra), 1"; newline();
 	inCode = false;
-	ofunctionCode << ".end " << mangleSymbol(psym) << endl;
+	ofunctionCode << ".end " << mangleSymbol(psym) << std::endl;
 }
 
 int AXPGen::fullSizeOf(PType t)
@@ -440,7 +440,7 @@ int AXPGen::argSizeOf(PType)
 void AXPGen::emitSymOffset(CSymbol* psym)
 {
 	ofunctionCode << mangleSymbol(psym);
-	ofunctionCode << " = " << dec << (psym->offset) << "\n";
+	ofunctionCode << " = " << std::dec << (psym->offset) << "\n";
 }
 
 
@@ -480,8 +480,8 @@ void AXPGen::processLocalSymbols(CFunction *pfunc)
 			psym->offset = offSaved;
 			offSaved += 8;				
 		}
-		cout << "Adjusted offset of " << psym->getNome() <<
-			 " = " << psym->offset << endl;
+		std::cout << "Adjusted offset of " << psym->getNome() <<
+			 " = " << psym->offset << std::endl;
 	}        
 	delete [] parameters;
 	
@@ -657,7 +657,7 @@ void AXPGen::genBinOp(PBinExpr p)
 	gen(p->dx());
 	
 	// costruzione del mnemonico
-	char *cp;	
+	const char *cp;	
 	AsmType t;
 	switch(*p) {
 	case Nadd: cp =  "add"; break;
@@ -769,12 +769,12 @@ void AXPGen::genCall(PBinExpr p)
 
 //*****************************************************************
 
-char *AXPGen::makeTypedIstr(char *src, AsmType t)
+char *AXPGen::makeTypedIstr(const char *src, AsmType t)
 {
 static char buf[20];
-	ostrstream os(buf, sizeof (buf));
+	std::ostrstream os(buf, sizeof (buf));
 	os << src;
-	os << (t == AFLOAT ? 's': (t == APTR ? 'q' : 'l')) << ends;
+	os << (t == AFLOAT ? 's': (t == APTR ? 'q' : 'l')) << std::ends;
 	return buf;
 }
 
@@ -835,14 +835,14 @@ void AXPGen::emitConst(PConstExpr p)
 	char c;
 	switch(p->ptipo->getType()) {
 	case tPTR:
-	case tINT: obuf  << dec << p->ival;
+	case tINT: obuf  << std::dec << p->ival;
 			   ocomment << "// " << p->ival;
 			   break;
-	case tCHAR: obuf  << dec << int(p->cval);
+	case tCHAR: obuf  << std::dec << int(p->cval);
 				ocomment << "// \'";
 				c = p->cval;
 				if(c< 20 || c> 127)
-					ocomment << "x" << hex << int(c);
+					ocomment << "x" << std::hex << int(c);
 				else 
 					ocomment << c;
 				ocomment << '\'';
@@ -884,9 +884,9 @@ void AXPGen::emitVar(PSymExpr p)
 	emitVar(p->getSymbol(), p->rvalue());
 }
 
-char * AXPGen::registerString(Registro reg, bool isFloat)
+const char * AXPGen::registerString(Registro reg, bool isFloat)
 {
-static char * name[32] = 
+static const char * name[32] = 
 	{
 		"$$0", "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", 
 		"$t6", "$t7", "$s0", "$s1", "$s2", "$s3", "$s4",
@@ -897,8 +897,8 @@ static char * name[32] =
 static char buf[5];
 
 	if(isFloat) {
-		ostrstream os(buf, sizeof(buf));
-		os << "$f" << dec << int(reg) << ends;
+		std::ostrstream os(buf, sizeof(buf));
+		os << "$f" << std::dec << int(reg) << std::ends;
 		return buf;
 	}
 	else
@@ -937,7 +937,7 @@ void AXPGen::genExpr(PExprStat p)
 }
 
 
-void AXPGen::emitIstr(char * text, Registro r,PSymbol s, bool isFloat)
+void AXPGen::emitIstr(const char * text, Registro r,PSymbol s, bool isFloat)
 {
 	if(s->isLocal()) 
 		emitIstr(text, r, memory(rFP, s->offset), isFloat);
@@ -949,37 +949,37 @@ void AXPGen::emitIstr(char * text, Registro r,PSymbol s, bool isFloat)
 	addComment(s->getNome());
 }
 
-void AXPGen::emitIstr(char * text, Registro r,memory mem, bool isFloat)
+void AXPGen::emitIstr(const char * text, Registro r,memory mem, bool isFloat)
 {
 	obuf << text << '\t' << registerString(r,isFloat) 
-		<< ',' << dec << int(mem.offset) << '(' << 
+		<< ',' << std::dec << int(mem.offset) << '(' << 
 		registerString(mem.index) << ')';
 }
 
-void AXPGen::emitIstr(char * text, Registro r_src, Registro r_src2, Registro r_dst, bool isFloat)
+void AXPGen::emitIstr(const char * text, Registro r_src, Registro r_src2, Registro r_dst, bool isFloat)
 {
 	obuf << text << '\t' << registerString(r_src,isFloat); 
 	obuf << ',' << registerString(r_src2,isFloat) << ',' << 
 		registerString(r_dst,isFloat);
 }
 
-void AXPGen::emitIstr(char * text, Registro r_src, imm immed, Registro r_dst)
+void AXPGen::emitIstr(const char * text, Registro r_src, imm immed, Registro r_dst)
 {
 	obuf << text << '\t' << registerString(r_src); 
-	obuf << ", " << dec << int(immed) << ',' << 
+	obuf << ", " << std::dec << int(immed) << ',' << 
 		registerString(r_dst);
 }
 
-void AXPGen::emitIstr(char * text, Registro r_src, Registro r_dst, bool isFloat)
+void AXPGen::emitIstr(const char * text, Registro r_src, Registro r_dst, bool isFloat)
 {
 	obuf << text << '\t' << registerString(r_dst, isFloat); 
 	obuf << ',' << registerString(r_src, isFloat);		
 }
 
-void AXPGen::emitIstr(char * text, imm immed, Registro r_dst)
+void AXPGen::emitIstr(const char * text, imm immed, Registro r_dst)
 {
 	obuf << text << '\t' << registerString(r_dst); 
-	obuf << ", " << dec << int(immed);		
+	obuf << ", " << std::dec << int(immed);		
 }
 
 	
@@ -1016,7 +1016,7 @@ void AXPGen::emitLabel(LabelSet lset)
 
 void AXPGen::emitLabel(const TrueLabel lbl)
 {
-	obuf << dec << lbl << ":"; newline();
+	obuf << std::dec << lbl << ":"; newline();
 }
 
 TrueLabel AXPGen::extractFirstLabel(LabelSet lset)

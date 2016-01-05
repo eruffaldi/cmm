@@ -105,7 +105,7 @@ public:
         typedef Key result;
 		keyiterator(const HashishTable<Key,T, compare> & ht) : aiter(ht) {}
         keyiterator(const HashishTable<Key,T,compare> & ht, int) : aiter(ht,0) {}                
-        result & operator*() { return citem()->key;}
+        result & operator*() { return aiter::citem()->key;}
     };
 
     class valueiterator:public aiter{
@@ -113,7 +113,7 @@ public:
         typedef T result;
 		valueiterator(const HashishTable<Key,T, compare> & ht) : aiter(ht) {}
         valueiterator(const HashishTable<Key,T,compare> & ht, int) : aiter(ht,0) {}                
-        result & operator*() { return citem()->value;}
+        result & operator*() { return aiter::citem()->value;}
     };
 
     

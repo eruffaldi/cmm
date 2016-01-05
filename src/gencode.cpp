@@ -6,7 +6,7 @@
 #include <string.h>
 
 
-static char * prefix = // prima di tutto TITLE nomefile sourcenge
+static const char * prefix = // prima di tutto TITLE nomefile sourcenge
 ".386P\n"
 "if @Version gt 510\n"
 ".model FLAT\n"
@@ -25,7 +25,7 @@ static char * prefix = // prima di tutto TITLE nomefile sourcenge
 "	ASSUME	CS: FLAT, DS: FLAT, SS: FLAT\n"
 "endif\n";
 
-static char * postfix = "END";
+static const char * postfix = "END";
 
 
 CodeGen::CodeGen(char * source, char *output, PBlock pb) :
@@ -53,7 +53,7 @@ CodeGen::CodeGen(char * source, char *output, PBlock pb) :
 	// inserisci [ftol] ofunctionCode
 	if(ftoldeclared) 
 		out << "extrn __ftol";	
-	ofunctionCode << ends;
+	ofunctionCode << std::ends;
 	out << ofunctionCode.str();
 	postCode();
 }
@@ -74,7 +74,7 @@ void CodeGen::postCode()
 	out << "_DATA\tSEGMENT\n";
 	for(int i = 0 ; i < stringStorage.size(); i++) {
 		CConstExpr * pe  = stringStorage[i];
-		out << "$SG" << dec << i << "\tDB\t";
+		out << "$SG" << std::dec << i << "\tDB\t";
 		const char * cp = pe->strval.cp;
 		const char * endcp = cp + pe->strval.len;
 		bool inString = false;
@@ -107,7 +107,7 @@ void CodeGen::postCode()
 			first = ',';
 		}
 		// append 0
-		out << endl;
+		out << std::endl;
 	}
 	out << "_DATA\tENDS\n";
 	out << postfix;
@@ -130,9 +130,9 @@ void CodeGen::newline()
 		for(int i = 0; i < 40-n; i++)
 			obuf << ' ';
 	}
-	ocomment << ends;
-	obuf << ocomment.str() << ends;	
-	ofunctionCode << (inCode ? "\t\t" : "") << obuf.str() << endl;
+	ocomment << std::ends;
+	obuf << ocomment.str() << std::ends;	
+	ofunctionCode << (inCode ? "\t\t" : "") << obuf.str() << std::endl;
 	obuf.seekp(0);
 	ocomment.seekp(0);
 }
@@ -212,11 +212,11 @@ void CodeGen::definePublicVar()
 		obuf << mangleSymbol(psym);
 		obuf << '\t' << (tp == ACHAR ? "DB" : "DD") << "\t";
 		if(psym->codice) 
-			cout << "Init values not implemented\n";		
+			std::cout << "Init values not implemented\n";		
 		if(elemCount == 1) 
 			obuf << "0";
 		else
-			obuf << '0' << hex << elemCount << dec << "h DUP (0)";
+			obuf << '0' << std::hex << elemCount << std::dec << "h DUP (0)";
 		addComment(psym->getNome());
 		newline();
         ++it;
@@ -231,7 +231,7 @@ void CodeGen::processSymbols(PBlock pb, int where)
 {
     
     FOR_EACH(psym, pb->getSymTab(), CSymbolTable::iterator, CSymbol*)
- 		ostrstream ost;
+ 		std::ostrstream ost;
 		if(psym->isFunction()) {
 			if(psym->isExtern()) {
 				if(psym->used)
@@ -239,7 +239,7 @@ void CodeGen::processSymbols(PBlock pb, int where)
 			}
 			else 
 				funDefinite.push_back((CFunction*)psym);						
-			ost << "_" << psym->getNome() << ends;
+			ost << "_" << psym->getNome() << std::ends;
 			psym->asmName = ost.str();
 		}
 		// variabili globali
@@ -248,7 +248,7 @@ void CodeGen::processSymbols(PBlock pb, int where)
 				globalVar.push_back(psym);
 			else if(psym->sType() == stoEXTERN)
 				symEsterni.push_back(psym);		
-			ost << "_" << psym->getNome() << ends;	
+			ost << "_" << psym->getNome() << std::ends;	
 			psym->asmName = ost.str();
 		}	
 		// simboli locali ad una funzione
@@ -256,11 +256,11 @@ void CodeGen::processSymbols(PBlock pb, int where)
 			if(psym->sType() == stoEXTERN) 
 				symEsterni.push_back(psym);			
 			// calcola mangled name come in processLocalBlock
-			ostrstream ost;
+			std::ostrstream ost;
 			ost << "_" << psym->getNome() << "$";
 			if(where == 2)
-				ost << dec << pb->id();
-			ost << ends;
+				ost << std::dec << pb->id();
+			ost << std::ends;
 			psym->asmName = ost.str();
 
 		}        
@@ -291,7 +291,7 @@ CodeGen::AsmType CodeGen::asmTypeOf(PType t)
 	case tFLOAT: return AFLOAT;
 	case tVOID: return AVOID;
 	default:
-		cout << "INTERNAL ERROR IN asmtypeof\n";
+		std::cout << "INTERNAL ERROR IN asmtypeof\n";
 		return AVOID;
 	}
 }
@@ -324,7 +324,7 @@ void CodeGen::prolog(CFunction *psym)
 	obuf << "push\tebp"; newline();
 	obuf << "mov\tebp, esp";newline();
 	if(psym->frameSize != 0) {
-		obuf << "sub\tesp, " << dec << psym->frameSize;		
+		obuf << "sub\tesp, " << std::dec << psym->frameSize;		
 		newline();
 	}
 }
@@ -342,7 +342,7 @@ void CodeGen::epilog(CFunction *psym)
 		obuf << "ret";	
 	else {
 		int callFrame = psym->argSize;		
-		obuf << "ret\t" << dec << callFrame;
+		obuf << "ret\t" << std::dec << callFrame;
 	}
 	newline();
 	inCode = false;
@@ -374,7 +374,7 @@ int CodeGen::argSizeOf(PType)
 void CodeGen::emitSymOffset(CSymbol* psym)
 {
 	ofunctionCode << mangleSymbol(psym);
-	ofunctionCode << " = " << dec << (psym->offset) << "\n";
+	ofunctionCode << " = " << std::dec << (psym->offset) << "\n";
 }
 
 
@@ -568,7 +568,7 @@ void CodeGen::genBinary(PBinExpr p)
 	assert(asmTypeOf(p->ptipo) != AFLOAT);
 	gen(p->sx());
 	gen(p->dx());
-	char * op;
+	const char * op;
 	switch(*p) {
 	case Nbinor: op = "or";break;
 	case Nbinand: op = "and"; break;
@@ -665,7 +665,7 @@ void CodeGen::genShift(PBinExpr p)
 	assert(asmTypeOf(p->sx()->ptipo) == asmTypeOf(p->dx()->ptipo));
 	gen(p->sx());
 	gen(p->dx());
-	char * op = *p == Nshl ? "shl" : "sar";
+	const char * op = *p == Nshl ? "shl" : "sar";
 	emitPop(ECX);
 	obuf << op << "\tdword ptr [esp], cl";
 	newline();
@@ -700,7 +700,7 @@ void CodeGen::genCast(PUnExpr p)
 			break;
 		default:
 			// TODO: error			
-			cout << "Error in generator\n";
+			std::cout << "Error in generator\n";
 			break;
 		}
 	}
@@ -716,7 +716,7 @@ void CodeGen::genCast(PUnExpr p)
 			emitPop(EAX); break;
 		default:
 			// TODO: errore
-			cout << "Error in generator\n";
+			std::cout << "Error in generator\n";
 			break;
 		}
 	}
@@ -734,14 +734,14 @@ void CodeGen::genCast(PUnExpr p)
 			emitPop(EAX); break;
 		default:
 			// TODO: errore
-			cout << "Error in generator\n";			
+			std::cout << "Error in generator\n";			
 			break;
 		}
 	}
 	else if(src == APTR && dst == AINT)
 		;	// donothing
 	else
-		cout << "Error in generator\n";			
+		std::cout << "Error in generator\n";			
 
 }
 
@@ -803,7 +803,7 @@ void CodeGen::genCall(PBinExpr p)
 
 	// ripulisce lo stack solo se cdecl
 	if(bcdecl) 
-		obuf << "add\tesp, " << dec << size; newline();	
+		obuf << "add\tesp, " << std::dec << size; newline();	
 	AsmType t = asmTypeOf(proto->functionReturn());
 	if(t == AFLOAT) {
 		emitPush(EAX);
@@ -840,21 +840,21 @@ void CodeGen::emitConst(PConstExpr p)
 	char c;
 	unsigned k;
 	switch(p->ptipo->getType()) {
-	case tINT: obuf << dec << p->ival;
+	case tINT: obuf << std::dec << p->ival;
 			   ocomment << "; " << p->ival;
 			   break;
-	case tCHAR: obuf << dec << int(p->cval);
+	case tCHAR: obuf << std::dec << int(p->cval);
 				ocomment << "; \'";
 				c = p->cval;
 				if(c< 20 || c> 127)
-					ocomment << "0" << hex << int(c) << "H" ;
+					ocomment << "0" << std::hex << int(c) << "H" ;
 				else 
 					ocomment << c;
 				ocomment << '\'';
 				break;
 	case tFLOAT:
 			k = *((int *)&p->fval);		// 32bit <-> 32bit
-			obuf << '0' << hex << k << "H";
+			obuf << '0' << std::hex << k << "H";
 			ocomment << "; " << p->fval;
 			break;
 	case tPTR:
@@ -862,7 +862,7 @@ void CodeGen::emitConst(PConstExpr p)
 		{
 			int code = stringStorage.size();
 			stringStorage.pushback((CConstExpr*)p);
-			obuf << "OFFSET FLAT:$SG" << dec << code;
+			obuf << "OFFSET FLAT:$SG" << std::dec << code;
 		}
 		break;
 	}
@@ -899,10 +899,10 @@ void CodeGen::emitVar(PSymExpr p)
 // size = 2 NORMAL
 // size = 1 TOP AH
 // size = -1 LOW AH
-char * CodeGen::registerString(Registro reg, int size )
+const char * CodeGen::registerString(Registro reg, int size )
 {
 static char buf[4];
-static char * regNames[] = {"eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp"};	
+static const char * regNames[] = {"eax", "ebx", "ecx", "edx", "esi", "edi", "ebp", "esp"};	
 	strcpy(buf, regNames[reg]);
 	if(size == 4) return buf;
 	if(size == 2) return buf+1;
@@ -996,9 +996,9 @@ void CodeGen::emitESP(int idx, int size)
 		obuf << "DWORD PTR";
 	obuf << " [esp";
 	if(idx > 0) 
-		obuf << "+" << dec << idx;
+		obuf << "+" << std::dec << idx;
 	else if(idx < 0)
-		obuf << "-" << dec << -idx;
+		obuf << "-" << std::dec << -idx;
 	obuf << "]";
 }
 
@@ -1040,7 +1040,7 @@ void CodeGen::genPreIncDec(PUnExpr p)
 {
 	// generazione molto semplice
 	gen(p->sx());
-	char * is = *p == Ninc ? "inc" : "dec"; 
+	const char * is = *p == Ninc ? "inc" : "std::dec"; 
 	switch(asmTypeOf(p->ptipo)) {
 	case ACHAR:		
 		emitPop(EAX);
@@ -1064,7 +1064,7 @@ void CodeGen::genPreIncDec(PUnExpr p)
 		int k = *((int *)&f);		// 32bit <-> 32bit
 		emitPop(EAX);	// estrae indirizzo variabile
 		obuf << "fld\tdword ptr [eax]"; newline();	// carica valore
-		obuf << "push\t" << dec << k; newline();	// mette 1
+		obuf << "push\t" << std::dec << k; newline();	// mette 1
 		obuf << (*p == Nadd ? "fadd" : "fsub")
 			<< "\tdword ptr [esp]"; newline(); 		
 		// assegna valore del risultato
@@ -1121,7 +1121,7 @@ void CodeGen::emitLabel(LabelSet lset)
 
 void CodeGen::emitLabel(const TrueLabel lbl)
 {
-	obuf << "$" << dec << lbl << ":"; newline();
+	obuf << "$" << std::dec << lbl << ":"; newline();
 }
 
 TrueLabel CodeGen::extractFirstLabel(LabelSet lset)
@@ -1149,7 +1149,7 @@ void CodeGen::emitJCond(const  LogicDesc & ld)
 
 void CodeGen::emitJCond(Cond c, LabelSet lset, bool isFloat )
 {
-char * jcondizione[] = {
+const char * jcondizione[] = {
 		"jmp", "jmp","", "jlt", "jgt", "jle", "jge", "je", "jne"
 	};
 	CondType ct = c;
@@ -1180,7 +1180,7 @@ char * jcondizione[] = {
 		default:
 			break;
 		};
-		obuf << "test\tah," <<dec<< j;
+		obuf << "test\tah," <<std::dec<< j;
 		newline();
 		switch(ct) {
 		case cGT:

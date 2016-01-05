@@ -15,13 +15,13 @@ class Cond {
 public:
 	Cond(CondType t) : ct(t) {}
 	static CondType tbl[9];
-	void not() {
+	void xnot() {
 		
 		ct = tbl[(int)ct];
 	}
 
 	operator CondType () const {return ct;}
-	Cond operator! () const {Cond c = *this; c.not(); return c;}
+	Cond operator! () const {Cond c = *this; c.xnot(); return c;}
 private:
 	CondType ct;
 };
@@ -48,8 +48,8 @@ public:
 	operator CondType  () const {return CondType(condizione);}
 	bool	  floatTest;	
 
-	void not() {
-		condizione.not();
+	void xnot() {
+		condizione.xnot();
 		LabelSet tmp = vero;
 		vero = falso;
 		falso = tmp;

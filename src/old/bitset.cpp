@@ -1,6 +1,7 @@
-#include <iostream.h>
+#include <iostream>
 #include "bitset.h"
-            
+ 
+
 void BitSet::init(int size)
 {
 	// dimensiona a size

@@ -15,7 +15,7 @@ public:
 	typedef pair<Key,T> value_type;
 	typedef key_compare<Key, T, Cmp> compare_type;
 	typedef binTree< value_type, compare_type > tree;
-	typedef tree::iterator iterator;	
+	typedef typename tree::iterator iterator;	
 
 protected:
 	tree _tree;
@@ -46,7 +46,7 @@ void mappa<Key,T,Cmp>::erase(const Key& k)
 }
 
 template <class Key, class T, class Cmp >
-mappa<Key,T,Cmp>::iterator mappa<Key,T,Cmp>::find(const Key&k)
+typename mappa<Key,T,Cmp>::iterator mappa<Key,T,Cmp>::find(const Key&k)
 {
 	return _tree.find(make_pair(k, T()));
 }

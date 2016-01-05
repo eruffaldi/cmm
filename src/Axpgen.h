@@ -71,11 +71,11 @@
 #define AXPGEN_H
 
 #include "node.h"
-#include <fstream.h>
+#include <fstream>
 #ifdef _MSC_VER
 #include <strstrea.h>
 #else
-#include <strstream.h>
+#include <strstream>
 #endif
 
 #include "bools.h"
@@ -134,8 +134,8 @@ private:
 	char outbuf[255];
 	char comment[255];
 	int bool2exprlabelcount;
-	ofstream out;
-	ostrstream obuf, ofunctionCode, ocomment;
+	std::ofstream out;
+	std::ostrstream obuf, ofunctionCode, ocomment;
 	PBlock m_top;
 	bool inCode;
 
@@ -203,7 +203,7 @@ private:
 	void emitJCond(Cond c, LabelSet lset, bool isFloat = false);	// vedere manuale	
 	TrueLabel extractFirstLabel(LabelSet lb);
 
-	char *makeTypedIstr(char *src, AsmType t);
+	char *makeTypedIstr(const char *src, AsmType t);
 /*
 	
 	
@@ -220,7 +220,7 @@ private:
 	
 
 */	
-	char * registerString(Registro reg, bool isFloat = false);
+	const char * registerString(Registro reg, bool isFloat = false);
 	void emitPop(Registro reg, AsmType t = AINT); 
 	void emitPush(Registro reg, AsmType t = AINT);	
 	void emitTop(Registro reg, AsmType t = AINT);
@@ -228,12 +228,12 @@ private:
 	void emitCharLoad(Registro addr, Registro tmp, Registro dst);
 	void emitCharStore(Registro addr, Registro tmp, Registro src);
 	void emitStore(Registro addr, Registro tmp, Registro src, AsmType t);	
-	void emitIstr(char * text, Registro r,memory mem, bool isFloat = false);
-	void emitIstr(char * text, Registro r,PSymbol, bool isFloat = false);
-	void emitIstr(char * text, Registro r_src, Registro r_src2, Registro r_dst, bool isFloat = false);
-	void emitIstr(char * text, Registro r_src, imm immed, Registro r_dst);
-	void emitIstr(char * text, Registro r_src, Registro r_dst, bool isFloat = false);
-	void emitIstr(char * text, imm immed, Registro r_dst);
+	void emitIstr(const char * text, Registro r,memory mem, bool isFloat = false);
+	void emitIstr(const char * text, Registro r,PSymbol, bool isFloat = false);
+	void emitIstr(const char * text, Registro r_src, Registro r_src2, Registro r_dst, bool isFloat = false);
+	void emitIstr(const char * text, Registro r_src, imm immed, Registro r_dst);
+	void emitIstr(const char * text, Registro r_src, Registro r_dst, bool isFloat = false);
+	void emitIstr(const char * text, imm immed, Registro r_dst);
 
 	// emitconst: genera il testo della costante, se e' float o string alloca
 	//	 anche un simbolo.

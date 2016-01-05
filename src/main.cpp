@@ -29,7 +29,7 @@
 // P		stampa il testo di preprocessing su un file .i
 // T		stampa il testo estratto dalla tokenizzazione su .tkn
 #include <stdlib.h>
-#include <iostream.h>
+#include <iostream>
 #include "parser.h"
 #include "types.h"
 #include "semantic.h"
@@ -45,7 +45,7 @@
 
 void info()
 {
-        cout << "Compilatore C+- 1.0\n"
+        std::cout << "Compilatore C+- 1.0\n"
 				"by Ruffaldi Emanuele 1998\n"
                 "Sintassi: cmm [opzioni] filename\n"
 		"Fp\t\tstampa albero di parsing\n"
@@ -61,10 +61,10 @@ void info()
         exit(-1);
 }
 
-char * changeExtension(char * nome, char * ext)
+const char * changeExtension(const char * nome, char * ext)
 {
 static char buf[255];
-	char * cp;
+	const char * cp;
 	cp = strrchr(nome, '\\') ;
 	if(!cp) cp = strrchr(nome, '/');
 	if(!cp) cp = nome;
@@ -89,7 +89,7 @@ void showSymTable(CSymbolTable & tab);
 int assembleAXP(char * source, char *obj)
 {
 #ifndef _MSC_VER
-	char * ar[] = 
+	const char * ar[] = 
 	{
 	"as",
 	source,
@@ -106,12 +106,12 @@ int assembleAXP(char * source, char *obj)
 
 void showFunction(CFunction * pfunc)
 {
-	cout << pfunc->getNome() << " function " << *pfunc->getTipo() << endl;
+	std::cout << pfunc->getNome() << " function " << *pfunc->getTipo() << std::endl;
 	
 	if(!pfunc->proto) {
-		cout << "--locals " << pfunc->frameSize << " bytes\n";
+		std::cout << "--locals " << pfunc->frameSize << " bytes\n";
 		showSymTable(pfunc->getTable());
-		cout << "--\n";
+		std::cout << "--\n";
 	}
 }
 
@@ -120,7 +120,7 @@ void showVariable(CSymbol * psym)
 	char * kind = psym->isStatic() ? "static" : 
 	psym->isParam() ? "param" : psym->isExtern() ? "extern":
 	"var";
-	cout << psym->getNome() << " " << kind <<" " << *psym->getTipo() << endl;
+	std::cout << psym->getNome() << " " << kind <<" " << *psym->getTipo() << std::endl;
 }
 
 void showSymTable(CSymbolTable & tab)
@@ -165,7 +165,7 @@ void stampaTokenized(char * source, char *output)
 		if(r.isEof())
 			break;
 		if(lineno != scanner.lineno()) {
-			of << endl;
+			of << std::endl;
 			lineno = scanner.lineno();
 		}
 		of << r << ' ';		
@@ -200,7 +200,7 @@ bool bPrintXML = false;
 						case 'A': bAXPTarget = true; break;
 						case '3': bAXPTarget = false; break;
 						default:
-							cout << "Opzione G" << *(cp-1) << " non riconosciuta\n";
+							std::cout << "Opzione G" << *(cp-1) << " non riconosciuta\n";
 							break;
 						}
 						break;
@@ -211,13 +211,13 @@ bool bPrintXML = false;
 						case 't': bPrintSymbols = true; break;
 						case 'x': bPrintXML = true; break;
 						default:
-							cout << "Opzione F" << *(cp-1) << " non riconosciuta\n";
+							std::cout << "Opzione F" << *(cp-1) << " non riconosciuta\n";
 							break;
 						}
 						break;
 					case 'o':
 						if(i+1 == argc) {
-							cout << "Required output filename\n";
+							std::cout << "Required output filename\n";
 							exit(-1);
 						}
 						strcpy(output, argv[++i]);
@@ -226,13 +226,13 @@ bool bPrintXML = false;
 						bAssembleOnly = true;
 						break;
 					default: 
-						cout << "Opzione " << *(cp-1) << " non riconosciuta\n"; 
+						std::cout << "Opzione " << *(cp-1) << " non riconosciuta\n"; 
 						break;
 				}
 			}
 		}
         else if(source != 0) {
-			cout << "File sorgente gia' specificato\n";
+			std::cout << "File sorgente gia' specificato\n";
             exit(-1);
         }
         else 
@@ -240,13 +240,13 @@ bool bPrintXML = false;
     }
 
     if(source == 0) {
-            cout << "Il file sorgente non e' stato specificato!\n";
+            std::cout << "Il file sorgente non e' stato specificato!\n";
             exit(-1);
     }
 	else {
-		ifstream ifs(source);
+		std::ifstream ifs(source);
 		if(!ifs) {
-			cout << "Il file sorgente " << source << endl;
+			std::cout << "Il file sorgente " << source << std::endl;
 			exit(-1);
 		}
 	}
@@ -274,14 +274,14 @@ bool bPrintXML = false;
 		CParser par(source);	
 		proot = par.parse();
 	}
-	// cout << "Parsing completed\n";
+	// std::cout << "Parsing completed\n";
 	if(bPrintParseTree && proot) {
-//		proot->write(cout,writeData());
-		PrintVisitor pv(cout, proot);
+//		proot->write(std::cout,writeData());
+		PrintVisitor pv(std::cout, proot);
 	}
 
 	if(bPrintXML && proot) {
-		ofstream of(changeExtension(source, "xml"));
+		std::ofstream of(changeExtension(source, "xml"));
 		proot->writeXml(of, writeXmlData(source));
 	}
 
@@ -293,16 +293,16 @@ bool bPrintXML = false;
 		ecount = CMM::getErrorCount();
 	}
 	if(bPrintSemanticTree) 
-		{PrintVisitor pv(cout, proot);}
+		{PrintVisitor pv(std::cout, proot);}
 
 	if(bPrintSymbols) {
-		cout << "Global symbols\n";
+		std::cout << "Global symbols\n";
 		showSymTable(proot->getSymTab());	
 	}
 
 	// Starting code generation
 	if(ecount == 0) {
-		cout << "Code Generation...\n";
+		std::cout << "Code Generation...\n";
 		char * asmTarget = changeExtension(source, 
 			bAXPTarget ? "s" : "asm");
 		if(!bAXPTarget) {
@@ -316,7 +316,7 @@ bool bPrintXML = false;
 	}	
 
 	if(ecount)
-	cout << "\n\t" << ecount << " error(s)" << endl;
+	std::cout << "\n\t" << ecount << " error(s)" << std::endl;
 	return 0;
 
 }
