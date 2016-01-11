@@ -24,7 +24,7 @@
 template <
 	class T1, class T2, class T3, class T4, class T5,
 	class T6, class T7, class T8, class T9, class T10>
-void Format_output_1(ostream& o,
+void Format_output_1(std::ostream& o,
 	Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>& fmt)
 {
 	assert(("No arg for output field", fmt.nCur< fmt.nParm));
@@ -46,7 +46,7 @@ void Format_output_1(ostream& o,
 template <class TExpected, class TActual>
 TExpected cvt(TExpected*, TActual )
 {
-	cerr<<"Illegal conversion requested\n";
+	std::cerr<<"Illegal conversion requested\n";
 //    	<< typeid(TActual).name()<<" to "<<typeid(TExpected).name()<<endl;
 
 	assert(("Illegal conversion requested", 0));
@@ -149,7 +149,7 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 
 	char ch;
 
-	istr.setf(0, ios::skipws);
+	istr.setf(0, std::ios::skipws);
 
 	while ( istr.get(ch))
 	{
@@ -163,13 +163,13 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 		case eFlags:
 			switch (ch) {
 			case '+':
-				os.setf(ios::showpos);
+				os.setf(std::ios::showpos);
 				continue;
 			case '-':
-				os.setf(ios::left);
+				os.setf(std::ios::left);
 				continue;
 			case '#':
-				os.setf(ios::showbase | ios::showpoint);
+				os.setf(std::ios::showbase | std::ios::showpoint);
 				continue;
 			case ' ':
 				bSpaceFlag= true;
@@ -186,7 +186,7 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 				{
 					w = Format_get_1((int*)0, *this);
 					if (w<0) {
-						os.setf(ios::left);
+						os.setf(std::ios::left);
 						w= -w;
 					}
 					os.width(w);
@@ -244,14 +244,14 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 			switch (ch) {
             case '*':
             	++nCur;
-                os.setf(ios::dec);
+                os.setf(std::ios::dec);
                 os.width(0);
                 os.precision(6);
             case '@':
 					if (prec == -1)
 		               	Format_output_1(os, *this);
 					else {
-                    	ostrstream ostr;
+                    	std::ostrstream ostr;
    		               	Format_output_1(ostr, *this);
                         char* sz= ostr.str();
 						if (int(strlen(sz)) >prec)
@@ -291,14 +291,16 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 				}
 				break;
 			case 'o':
-				os<<oct;
+				os<<std::oct;
+				break;
 			case 'x':
 			case 'X':
-				os<<hex;
+				os<<std::hex;
 				if (ch=='X')
 				{
-					os.setf(ios::uppercase);
+					os.setf(std::ios::uppercase);
 				}
+				break;
 			case 'u':
 				if (prec > -1) {
 					os.width(prec);
@@ -322,16 +324,16 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
 			case 'G':
 				switch (ch) {
 				case 'f':
-					os.setf(ios::fixed);
+					os.setf(std::ios::fixed);
 					break;
 				case 'e':
-					os.setf(ios::scientific);
+					os.setf(std::ios::scientific);
 					break;
 				case 'E':
-					os.setf(ios::scientific|ios::uppercase);
+					os.setf(std::ios::scientific|std::ios::uppercase);
 					break;
 				case 'G':
-					os.setf(ios::uppercase);
+					os.setf(std::ios::uppercase);
                     break;
 				}
 				if (prec > -1)
@@ -385,31 +387,31 @@ void Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>::
                 }
             }
 			eFormat= eAsIs;
-			os.flags(ios::skipws|ios::dec);
+			os.flags(std::ios::skipws|std::ios::dec);
             os.precision(6);
             os.width(0); // unuseful
 		}
 	}
     assert(("Some arg not eaten", nParm == nCur));
-    os<<ends;
+    os<<std::ends;
 }
 
 //////////////////////////////////////////////////////////////
 
 template <class Dummy>
-void recur_comma(ostream& osz, int x, char comma, Dummy d)
+void recur_comma(std::ostream& osz, int x, char comma, Dummy d)
 {
 	if (x<1000)
 		osz<<x;
 	else {
 		recur_comma(osz, x/1000, comma, d);
-		osz<<comma<<setw(3)<<setfill('0')<<(x%1000);
+		osz<<comma<<std::setw(3)<<std::setfill('0')<<(x%1000);
 	}
 }
 
 
 template <class Dummy>
-ostream& comma_print(ostream& ostr, double x,
+std::ostream& comma_print(std::ostream& ostr, double x,
 	char comma, Dummy d)
 {
 	int w= ostr.width();
@@ -421,7 +423,7 @@ ostream& comma_print(ostream& ostr, double x,
 		ostr<<comma;
 		x-= y*1000;
 	}
-	ostr<<setw(3)<<setfill('0')<<x
-		<<setw(w)<<setfill(ch);
+	ostr<<std::setw(3)<<std::setfill('0')<<x
+		<<std::setw(w)<<std::setfill(ch);
 	return ostr;
 }

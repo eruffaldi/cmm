@@ -6,7 +6,7 @@
 // Gestione degli errori:
 //	dentro il parser gli errori vanno solamente stampati 
 //	non lanciamo una eccezione
-#include <iostream.h>
+#include <iostream>
 #include <string.h>
 #include "parser.h"
 #include "keywords.h"
@@ -20,19 +20,19 @@ class par_exception: public cmm_exception
 public:
 	par_exception(ErrorCode ec) {
 		ostrstream os;
-		os << CMM::lookupError(ec)<< ends;
+		os << CMM::lookupError(ec)<< std::ends;
 		_str = os.str();		
 	}
 
 	par_exception(ErrorCode ec, const char *s ) {
 		ostrstream os;
-		os << format(CMM::lookupError(ec),s) << ends;
+		os << format(CMM::lookupError(ec),s) << std::ends;
 		_str = os.str();		
 	}
 
 	par_exception(ErrorCode ec, int c ) {
 		ostrstream os;
-		os << format(CMM::lookupError(ec),char(c)) << ends;
+		os << format(CMM::lookupError(ec),char(c)) << std::ends;
 		_str = os.str();		
 	}
 
@@ -49,7 +49,7 @@ void CScanOnly::Error(ScanError r, char * more)
 {
 	CScan::Error(r, more);
 	ostrstream os;
-	os << "lexer " << r << ": " << more << ends;
+	os << "lexer " << r << ": " << more << std::ends;
 	CMM::error(os.str());
 	delete os.str();
 }
@@ -270,7 +270,7 @@ PExpression expr;
 			default:
 				{
 					ostrstream os;
-					os << "statement token " << current() << " not yet implemented"<<ends;
+					os << "statement token " << current() << " not yet implemented"<<std::ends;
 					CMM::error(os.str());
 					delete os.str();
 				}
@@ -288,7 +288,7 @@ PExpression expr;
 		else {
 			{
 				ostrstream os;
-				os << "unknown token " << current() << " in body"<<ends;
+				os << "unknown token " << current() << " in body"<<std::ends;
 				CMM::error(os.str());
 				delete os.str();
 			}

@@ -1,11 +1,11 @@
-#include <iostream.h>
+#include <iostream>
 #include "NatSet.h"
 
 void showSet(NatSet s) {
     unsigned int n;
     s.begin(n);
-    while(s.ok(n)) cout << s.next(n) << " ";
-    cout << endl;
+    while(s.ok(n)) std::cout << s.next(n) << " ";
+    std::cout << std::endl;
 }
 
 /*

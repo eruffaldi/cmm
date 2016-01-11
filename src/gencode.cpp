@@ -28,7 +28,7 @@ static const char * prefix = // prima di tutto TITLE nomefile sourcenge
 static const char * postfix = "END";
 
 
-CodeGen::CodeGen(char * source, char *output, PBlock pb) :
+CodeGen::CodeGen(const char * source, const char *output, PBlock pb) :
 	out(output) , obuf(outbuf, sizeof(outbuf)), ocomment(comment, sizeof(comment)),
 		inCode(false), ftoldeclared(false), bool2exprlabelcount(0)
 , stringStorage()

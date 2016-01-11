@@ -122,7 +122,7 @@ protected:
 	int exitlabelcount;
 	stackframeinfo frame;
 public:
-	AXPGen(char * source, char * output, PBlock top);
+	AXPGen(const char * source, const char * output, PBlock top);
 	bool ready(); 
 private:
 	// members

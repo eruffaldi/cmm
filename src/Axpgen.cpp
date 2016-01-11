@@ -34,7 +34,7 @@ static const char * prefix =
 static const char * postfix = "";
 
 
-AXPGen::AXPGen(char * source, char *output, PBlock pb) :
+AXPGen::AXPGen(const char * source, const char *output, PBlock pb) :
 	out(output) , obuf(outbuf, sizeof(outbuf)), ocomment(comment, sizeof(comment)),
 		inCode(false), ftoldeclared(false), bool2exprlabelcount(0),
 		exitlabelcount(0)

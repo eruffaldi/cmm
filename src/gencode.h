@@ -28,7 +28,7 @@ protected:
 	enum AsmType { AVOID, ACHAR, AINT, APTR, AFLOAT};
 
 public:
-	CodeGen(char * source, char * output, PBlock top);
+	CodeGen(const char * source, const char * output, PBlock top);
 	bool ready(); 
 private:
 	// members

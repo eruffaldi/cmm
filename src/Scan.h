@@ -19,7 +19,7 @@ class CScan  : public CPreproc
 {
 public:
 	struct KeywordEntry {
-		char *		text;
+		const char *		text;
 		TokenType	tkn;
 	};
 

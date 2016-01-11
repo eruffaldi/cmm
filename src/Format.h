@@ -80,9 +80,9 @@
 
 #ifndef __FORMAT_H
 #define __FORMAT_H
-#include <iostream.h>
-#include <iomanip.h>
-#include <strstrea.h>
+#include <iostream>
+#include <iomanip>
+#include <strstream>
 #include <assert.h>
 
 
@@ -91,7 +91,7 @@
 template <class T1, class T2, class T3, class T4, class T5,
 	class T6, class T7, class T8, class T9, class T10>
 struct Format {
-	istrstream istr;
+	std::istrstream istr;
     int nParm;
     const T1& t1;
     const T2& t2;
@@ -104,7 +104,7 @@ struct Format {
     const T9& t9;
     const T10& t10;
     int nCur;
-    ostrstream os;
+    std::ostrstream os;
 
 	Format(const char* _szFormat, int _nParm,
     const T1& _t1, const T2& _t2,
@@ -116,8 +116,8 @@ struct Format {
     {do_output(); }
 
     ~Format() {delete os.str();}
-    void printOn(ostream& ostr) const
-    { ostr<< ((ostrstream&)os).str(); }
+    void printOn(std::ostream& ostr) const
+    { ostr<< ((std::ostrstream&)os).str(); }
 
 /*
 // BC++ 5.0 does not like friend templates, so I had to make Format a struct
@@ -142,7 +142,7 @@ struct Format {
 
 template <class T1, class T2, class T3, class T4, class T5,
 	class T6, class T7, class T8, class T9, class T10>
-inline ostream& operator<<(ostream& o,
+inline std::ostream& operator<<(std::ostream& o,
 	const Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>& fmt)
 {
 	((Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, T10>&)fmt).printOn(o);
@@ -170,7 +170,7 @@ inline Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, int>
 format(const char* szFormat, const T1& t1, const T2& t2,
 	const T3& t3, const T4& t4, const T5& t5, const T6&  t6,
 	const T7& t7, const T8& t8, const T9& t9)
-{ return Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, int)
+{ return Format<T1, T2, T3, T4, T5, T6, T7, T8, T9, int>
 		(szFormat, 9, t1, t2, t3, t4, t5, t6, t7, t8, t9, 0);
 }
 
@@ -180,7 +180,7 @@ inline Format<T1, T2, T3, T4, T5, T6, T7, T8, int, int>
 format(const char* szFormat, const T1& t1, const T2& t2,
 	const T3& t3, const T4& t4, const T5& t5, const T6&  t6,
 	const T7& t7, const T8& t8)
-{ return Format<T1, T2, T3, T4, T5, T6, T7, T8, int, int)
+{ return Format<T1, T2, T3, T4, T5, T6, T7, T8, int, int>
 		(szFormat, 9, t1, t2, t3, t4, t5, t6, t7, t8, 0, 0);
 }
 
@@ -190,7 +190,7 @@ inline Format<T1, T2, T3, T4, T5, T6, T7, int, int, int>
 format(const char* szFormat, const T1& t1, const T2& t2,
 	const T3& t3, const T4& t4, const T5& t5, const T6&  t6,
 	const T7& t7)
-{ return Format<T1, T2, T3, T4, T5, T6, T7, int, int, int)
+{ return Format<T1, T2, T3, T4, T5, T6, T7, int, int, int>
 		(szFormat, 8, t1, t2, t3, t4, t5, t6, t7, 0, 0, 0);
 }
 
@@ -199,7 +199,7 @@ template <class T1, class T2, class T3, class T4, class T5,
 inline Format<T1, T2, T3, T4, T5, T6, int, int, int, int>
 format(const char* szFormat, const T1& t1, const T2& t2,
 	const T3& t3, const T4& t4, const T5& t5, const T6&  t6)
-{ return Format<T1, T2, T3, T4, T5, T6, int, int, int, int)
+{ return Format<T1, T2, T3, T4, T5, T6, int, int, int, int>
 		(szFormat, 6, t1, t2, t3, t4, t5, t6, 0, 0, 0, 0);
 }
 
@@ -208,7 +208,7 @@ template <class T1, class T2, class T3, class T4, class T5>
 inline Format<T1, T2, T3, T4, T5, int, int, int, int, int>
 format(const char* szFormat, const T1& t1, const T2& t2,
 	const T3& t3, const T4& t4, const T5& t5)
-{ return Format<T1, T2, T3, T4, T5, int, int, int, int, int)
+{ return Format<T1, T2, T3, T4, T5, int, int, int, int, int>
 		(szFormat, 5, t1, t2, t3, t4, t5, 0, 0, 0, 0, 0);
 }
 
@@ -262,11 +262,11 @@ struct RepeatPair {
 	unsigned n;
 	RepeatPair(	const char* as, unsigned an):
 		s(as), n(an) {}
-	void print(ostream& o);
+	void print(std::ostream& o);
 };
 
 template <class Dummy>
-void RepeatPair<Dummy>::print(ostream& o)
+void RepeatPair<Dummy>::print(std::ostream& o)
 {
 	for (int n1 = n; n1>0; n1--)
 		o << s;
@@ -275,7 +275,7 @@ void RepeatPair<Dummy>::print(ostream& o)
 inline RepeatPair<int> repeat(const char* s, int n)
 	{ return RepeatPair<int> (s, n); }
 
-inline ostream& operator<<(ostream& ostr, RepeatPair<int>& r)
+inline std::ostream& operator<<(std::ostream& ostr, RepeatPair<int>& r)
 	{ r.print(ostr); return ostr;}
 
 // Example: 	cout<<repeat("*", 10)<<endl;
@@ -293,7 +293,7 @@ struct comma_parm {
 inline comma_parm comma(double n, char comma)
 	{ return comma_parm (n, comma); }
 
-inline ostream& operator<<(ostream& ostr, comma_parm& x)
+inline std::ostream& operator<<(std::ostream& ostr, comma_parm& x)
 	{ return comma_print(ostr, x.m_n, x.m_comma, 0);}
 	
 

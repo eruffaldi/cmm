@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
  #include "node.h"
 #include "bools.h"
 // Funzioni di output dei nodi
@@ -177,7 +177,7 @@ CFuncBody::CFuncBody(int no, PBlock parent, PExpression e ) :
 void PrintVisitor::VisitCNode(CNode * pn)  
 {
 	spacer(o,level);
-	o << nodeTable[*pn] << endl;
+	o << nodeTable[*pn] << std::endl;
 	doExprChild(pn);
 }
 
@@ -209,7 +209,7 @@ void PrintVisitor::VisitCExpression(CExpression * pn)
 	}
 	if(pn->lvalue()) { o << "L"; }
 	if(pn->cvalue()) { o << "C"; }
-	o << endl;
+	o << std::endl;
 	doExprChild(pn);
 }
 
@@ -253,16 +253,16 @@ void PrintVisitor::VisitCConstExpr(CConstExpr * pn)
 	case tFLOAT : o << "float = " << pn->fval; break;
 	case tPTR: o << "string"; break;
 	default:
-		cerr << "ERRORE INTERNO!";
+		std::cerr << "ERRORE INTERNO!";
 		break;
 	}
-	o << endl;
+	o << std::endl;
 }
 
 void PrintVisitor::VisitCIdentifer(CIdentifer * pn)  
 {
 	spacer(o, level);
-	o << "\"" << (pn->identifer()? pn->identifer() : "") << "\"" << endl;
+	o << "\"" << (pn->identifer()? pn->identifer() : "") << "\"" << std::endl;
 
 }
 
@@ -272,7 +272,7 @@ void PrintVisitor::VisitCStatement(CStatement * pn)
 void PrintVisitor::VisitCBlock(CBlock * pn)  
 {
 	spacer(o,level);
-	o << nodeTable[pn->node()] << endl;
+	o << nodeTable[pn->node()] << std::endl;
 
 	CBlock::iterator it = pn->begin();
 	while(it != pn->end()) {
@@ -317,7 +317,7 @@ void PrintVisitor::stampaLogic(LogicDesc & ld)
 		o << '*';
 	else
 		o << ld.unisci;
-	o << '>' << endl;
+	o << '>' << std::endl;
 }
 
 void PrintVisitor::VisitCBoolNode(CBoolNode * pn)  
@@ -331,7 +331,7 @@ void PrintVisitor::VisitCBoolNode(CBoolNode * pn)
 void PrintVisitor::VisitCCondStat(CCondStat * pn)  
 {
 	spacer(o,level);
-	o << nodeTable[pn->node()] << endl;
+	o << nodeTable[pn->node()] << std::endl;
 	writeData tmp = level;	
 	switch(pn->node()) {
 	case Nif:

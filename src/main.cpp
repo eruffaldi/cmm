@@ -61,7 +61,7 @@ void info()
         exit(-1);
 }
 
-const char * changeExtension(const char * nome, char * ext)
+const char * changeExtension(const char * nome, const char * ext)
 {
 static char buf[255];
 	const char * cp;
@@ -86,7 +86,7 @@ static char buf[255];
 
 void showSymTable(CSymbolTable & tab);
 
-int assembleAXP(char * source, char *obj)
+int assembleAXP(const char * source, const char *obj)
 {
 #ifndef _MSC_VER
 	const char * ar[] = 
@@ -97,7 +97,7 @@ int assembleAXP(char * source, char *obj)
 	obj,
 	0
 	};
-	return execvp("as", ar);
+	return execvp("as", (char *const *)ar);
 #else
 	return 0;
 #endif
@@ -117,7 +117,7 @@ void showFunction(CFunction * pfunc)
 
 void showVariable(CSymbol * psym)
 {
-	char * kind = psym->isStatic() ? "static" : 
+	const char * kind = psym->isStatic() ? "static" : 
 	psym->isParam() ? "param" : psym->isExtern() ? "extern":
 	"var";
 	std::cout << psym->getNome() << " " << kind <<" " << *psym->getTipo() << std::endl;
@@ -140,10 +140,10 @@ void showSymTable(CSymbolTable & tab)
 
 
 // stampa solamente l'output del preprocessore
-void stampaPreprocessed(char * source, char *output)
+void stampaPreprocessed(const char * source, const char *output)
 {
 	CPreproc pre(source);
-	ofstream of(output);
+	std::ofstream of(output);
 	char c;
 	while(!pre.eof()) {
 		c = pre.get();
@@ -155,9 +155,9 @@ void stampaPreprocessed(char * source, char *output)
 }
 
 // stampa i token estratti e reinseriti dentro lo stream
-void stampaTokenized(char * source, char *output)
+void stampaTokenized(const char * source, const char *output)
 {
-	ofstream of(output);
+	std::ofstream of(output);
 	CScanOnly scanner(source);
 	int lineno = 0;
 	while(scanner) {
@@ -282,7 +282,8 @@ bool bPrintXML = false;
 
 	if(bPrintXML && proot) {
 		std::ofstream of(changeExtension(source, "xml"));
-		proot->writeXml(of, writeXmlData(source));
+		 writeXmlData q(source);
+		proot->writeXml(of,q);
 	}
 
 	
@@ -303,7 +304,7 @@ bool bPrintXML = false;
 	// Starting code generation
 	if(ecount == 0) {
 		std::cout << "Code Generation...\n";
-		char * asmTarget = changeExtension(source, 
+		const char * asmTarget = changeExtension(source, 
 			bAXPTarget ? "s" : "asm");
 		if(!bAXPTarget) {
 			CodeGen cg(source, asmTarget, proot);		
